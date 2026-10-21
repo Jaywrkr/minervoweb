@@ -27,30 +27,30 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     <header class="dl-nav">
       <a class="dl-wm" href="#"><span id="wm">minərvo</span><i>.</i><span class="dl-wear" id="wear"></span></a>
       <nav class="dl-tiles" aria-label="Principal">
-        {nav.map((x) => <a class="dl-tile" href="#" style={`--cc:var(--${x.cc})`}><span>{x.n}</span><b>{x.label}</b><span aria-hidden="true">↗</span></a>)}
+        {nav.map((x) => <a class="dl-tile" href="#" style={`--cc:var(--${x.cc})`} data-cc={x.cc}><span>{x.n}</span><b>{x.label}</b><span aria-hidden="true">↗</span></a>)}
       </nav>
       <span class="dl-pill dl-ed" id="edTop">edición nº —</span>
     </header>
 
     <main id="contenido" class="dl-page">
       <section class="dl-bento">
-        <div class="dl-card dl-hero" style="--cc:var(--paper)">
+        <div class="dl-card dl-hero" style="--cc:var(--paper)" data-cc="paper">
           <span class="dl-pill">estudio de sistemas de marca · cuenca</span>
           <h1 class="dl-h1" id="h1" aria-label="Diseñamos sistemas, no páginas.">Diseñamos sistemas, no páginas.</h1>
           <p class="dl-lead">Identidad, web, motion y experiencias que funcionan como un solo sistema. Gira los diales: esta página también es uno.</p>
         </div>
-        <div class="dl-card dl-art" style="--cc:var(--p5)">
+        <div class="dl-card dl-art" style="--cc:var(--p5)" data-cc="p5">
           <svg class="dl-comp" id="comp" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
         </div>
       </section>
 
-      <div class="dl-ticker" aria-hidden="true"><div class="dl-track">
+      <div class="dl-ticker" aria-hidden="true" style="--cc:var(--p4)" data-cc="p4"><div class="dl-track">
         {[0, 1].map(() => ticker.map((t) => <span>{t}<i>✦</i></span>))}
       </div></div>
 
       <section class="dl-services" aria-label="Servicios">
         {services.map((s, i) => (
-          <article class="dl-card" style={`--cc:var(--${s.cc})`}>
+          <article class="dl-card" style={`--cc:var(--${s.cc})`} data-cc={s.cc}>
             <span class="dl-pill">0{i + 1}</span>
             <h2>{s.t}</h2>
             <p>{s.d}</p>
@@ -61,7 +61,7 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
 
       <section class="dl-work" aria-label="Trabajo">
         {work.map((w) => (
-          <a class="dl-card dl-case" href="#" style={`--cc:var(--${w.cc})`}>
+          <a class="dl-card dl-case" href="#" style={`--cc:var(--${w.cc})`} data-cc={w.cc}>
             <span class="dl-thumb" aria-hidden="true"></span>
             <span class="dl-meta"><b>{w.t}</b><span>{w.y} · {w.k}</span></span>
           </a>
@@ -75,8 +75,8 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
         <div class="dl-brands" role="group" aria-label="Vestir la web">
           <span class="dl-lbl">vestir</span>
           <button class="dl-btn" data-brand="minervo" aria-pressed="true">minərvo</button>
-          <button class="dl-btn" data-brand="nordika" aria-pressed="false">nórdika<sup>lab</sup></button>
-          <button class="dl-btn" data-brand="pulpa" aria-pressed="false">pulpa<sup>lab</sup></button>
+          <button class="dl-btn" data-brand="coresolutions" aria-pressed="false">coresolutions</button>
+          <button class="dl-btn" data-brand="jay" aria-pressed="false">jay jaramillo</button>
         </div>
         <div class="dl-brands">
           <button class="dl-btn" id="dice" title="combinación al azar">azar</button>
@@ -95,6 +95,8 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
 
 <style is:global>
   @font-face{font-family:"Bricolage";src:url("/fonts/BricolageGrotesque-Variable.woff2") format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
+  @font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+  @font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2");font-weight:600;font-display:swap}
   @property --g{syntax:'<color>';inherits:true;initial-value:#f4ebe1}
   @property --t{syntax:'<color>';inherits:true;initial-value:#0b0b0d}
   @property --ci{syntax:'<color>';inherits:true;initial-value:#0b0b0d}
@@ -111,7 +113,8 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
   .dl{
     --e:.5; --r:.5; --c:.6; --k:0;
     --s:calc(.75 + var(--e) * .7);
-    --w:calc(420 + var(--c) * 380);
+    --wmax:800; --rot:1; --bdmin:0%;
+    --w:min(calc(420 + var(--c) * 380),var(--wmax));
     --gap:calc((6px + (1 - var(--r)) * 22px) * var(--s));
     --radius-card:32;
     --font:"Geist",system-ui,sans-serif;
@@ -123,15 +126,15 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     padding:0 max(12px,2vw) 240px;overflow-x:hidden;
   }
   .dl.no-tr,.dl.no-tr *{transition:none!important}
-  .dl a{color:inherit;text-decoration:none}
+  :where(.dl) a{color:inherit;text-decoration:none}
 
   /* tarjeta base: con contraste bajo se vuelve papel con borde; con contraste alto, bloque de color */
   .dl-card{
     --bg:color-mix(in oklab,var(--cc) calc(var(--c) * 100%),var(--paper));
     background:var(--bg);color:var(--ci);border-radius:var(--rad);
-    border:1.5px solid color-mix(in oklab,var(--t) calc((1 - var(--c)) * 70%),transparent);
+    border:1.5px solid color-mix(in oklab,var(--t) max(calc((1 - var(--c)) * 70%),var(--bdmin)),transparent);
     padding:calc(22px * var(--s));
-    transform:rotate(calc(var(--rr,0) * var(--k) * 6deg)) translateY(calc(var(--ry,0) * var(--k) * 24px));
+    transform:rotate(calc(var(--rr,0) * var(--k) * var(--rot) * 6deg)) translateY(calc(var(--ry,0) * var(--k) * 24px));
     transition:transform .6s cubic-bezier(.2,.8,.2,1),border-radius .5s,padding .5s;
   }
   .dl-pill{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border:1.5px solid currentColor;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
@@ -153,15 +156,15 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
 
   /* hero en bento */
   .dl-bento{display:grid;grid-template-columns:7fr 5fr;gap:var(--gap)}
-  .dl-hero{color:var(--t);display:flex;flex-direction:column;align-items:flex-start;gap:calc(18px * var(--s));min-height:min(78vh,720px);justify-content:space-between}
+  .dl-hero{display:flex;flex-direction:column;align-items:flex-start;gap:calc(18px * var(--s));min-height:min(78vh,720px);justify-content:space-between}
   .dl-h1{
     font-family:var(--hfont);text-transform:var(--case);font-weight:var(--w);font-variation-settings:"wght" var(--w);
     font-size:calc(clamp(44px,7.4vw,124px) * var(--s));line-height:calc(1 - var(--r) * .1);letter-spacing:-.035em;margin:auto 0 0;max-width:11ch;
     transition:font-size .5s,line-height .5s,font-weight .5s;
   }
   .dl-h1 .w{display:inline-block;white-space:nowrap}
-  .dl-h1 .hlw{background:var(--p1);color:var(--ci);border-radius:.25em;padding:0 .12em;margin:0 -.04em}
-  .dl-h1 .ch{display:inline-block;transform:translate(calc(var(--rx) * var(--k) * .1em),calc(var(--ry) * var(--k) * .18em)) rotate(calc(var(--rr) * var(--k) * 16deg));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+  .dl-h1 .hlw{background:var(--cc);color:var(--ci);border-radius:.25em;padding:0 .12em;margin:0 -.04em}
+  .dl-h1 .ch{display:inline-block;transform:translate(calc(var(--rx) * var(--k) * .1em),calc(var(--ry) * var(--k) * .18em)) rotate(calc(var(--rr) * var(--k) * var(--rot) * 16deg));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
   .dl-lead{font-size:calc(17px * min(var(--s),1.2));line-height:1.45;max-width:40ch;margin:0}
   .dl-art{padding:0;overflow:hidden;display:grid;place-items:center}
   .dl-comp{width:100%;height:100%;max-height:min(78vh,720px);display:block}
@@ -170,8 +173,8 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
   @media (max-width:760px){.dl-bento{grid-template-columns:1fr}.dl-hero{min-height:0}.dl-art{aspect-ratio:1}}
 
   /* cinta */
-  .dl-ticker{margin:var(--gap) 0;border-radius:999px;background:color-mix(in oklab,var(--p4) calc(var(--c) * 100%),var(--paper));color:var(--ci);overflow:hidden;
-    border:1.5px solid color-mix(in oklab,var(--t) calc((1 - var(--c)) * 70%),transparent)}
+  .dl-ticker{margin:var(--gap) 0;border-radius:999px;background:color-mix(in oklab,var(--cc) calc(var(--c) * 100%),var(--paper));color:var(--ci);overflow:hidden;
+    border:1.5px solid color-mix(in oklab,var(--t) max(calc((1 - var(--c)) * 70%),var(--bdmin)),transparent)}
   .dl-track{display:flex;width:max-content;animation:dl-tick calc(14s + (1 - var(--r)) * 30s) linear infinite}
   .dl-track span{font-family:var(--hfont);font-weight:var(--w);text-transform:var(--case);font-size:calc(20px * var(--s));padding:10px 0 10px 22px;white-space:nowrap}
   .dl-track i{font-style:normal;margin-left:22px}

@@ -10,28 +10,50 @@ const DIALS = [
   { id: 'k', name: 'caos' },
 ];
 
-// Marcas. nórdika y pulpa son ficticias, de laboratorio, hasta tener casos reales con permiso.
+// Marcas. Además de minərvo, dos marcas reales de Jay para probar "vestir": Coresolutions (tokens de su
+// sistema de diseño) y Jay Jaramillo (su web personal). Cada marca trae también sus REGLAS: el sistema
+// las respeta aunque giren los diales (p. ej. sin ángulos, peso máximo, mucho espacio vacío).
+// ink: [oscuro, claro] — el texto de cada bloque se elige solo según el color de fondo.
 const BRANDS = {
   // minərvo fresco: crema, bloques de color y display grueso
   minervo: {
-    name: 'minərvo', g: '#f4ebe1', t: '#0b0b0d', ci: '#0b0b0d', paper: '#fffaf3',
+    name: 'minərvo', g: '#f4ebe1', t: '#0b0b0d', ink: ['#0b0b0d', '#fffaf3'], paper: '#fffaf3',
     p: ['#5fe3a1', '#ff5b2e', '#ffb800', '#1fbf5f', '#ff9ec7', '#9b7bff'],
     font: '"Geist",system-ui,sans-serif', hfont: '"Bricolage","Geist",sans-serif', case: 'none', radius: 32,
     shapes: ['circulo', 'dona', 'luna', 'triangulo', 'pildora', 'cuadrado'],
+    rules: { wmax: 800, angles: true, density: 1, border: 0, mono: false },
   },
-  nordika: {
-    name: 'nórdika', g: '#e6e9e4', t: '#14213d', ci: '#f4f1ea', paper: '#f7f6f1',
-    p: ['#2f5d8a', '#c2593f', '#4f7564', '#3d405b', '#a2821c', '#14213d'],
-    font: 'Georgia,"Times New Roman",serif', hfont: 'Georgia,"Times New Roman",serif', case: 'none', radius: 0,
-    shapes: ['circulo', 'cuadrado', 'triangulo'],
+  // Coresolutions: navy #01095c, rampa de azules, IBM Plex Sans 600 como máximo, esquinas a 0
+  coresolutions: {
+    name: 'coresolutions', g: '#ffffff', t: '#12151c', ink: ['#12151c', '#ffffff'], paper: '#f2f6f9',
+    p: ['#01095c', '#2d43e7', '#161f7e', '#3c4cd7', '#2433a8', '#00043e'],
+    font: '"IBM Plex Sans",system-ui,sans-serif', hfont: '"IBM Plex Sans",system-ui,sans-serif', case: 'none', radius: 0,
+    shapes: ['cuadrado', 'circulo'],
+    rules: { wmax: 600, angles: true, density: 1, border: 30, mono: false },
   },
-  pulpa: {
-    name: 'pulpa', g: '#ff5a36', t: '#1d0b2e', ci: '#1d0b2e', paper: '#fff3e0',
-    p: ['#ffd23f', '#3bceac', '#fff3e0', '#c9b6ff', '#ffb3c7', '#ffd23f'],
-    font: '"Geist",system-ui,sans-serif', hfont: 'var(--poster)', case: 'uppercase', radius: 48,
-    shapes: ['circulo', 'dona', 'pildora', 'luna'],
+  // Jay Jaramillo: negro puro, Geist Mono, nada de pesos gruesos, sin ángulos que no sean rectos, espacio vacío
+  jay: {
+    name: 'jay jaramillo', g: '#000000', t: '#ffffff', ink: ['#000000', '#ffffff'], paper: '#000000',
+    p: ['#000000', '#ffffff', '#000000', '#000000', '#000000', '#000000'],
+    font: '"Geist Mono",ui-monospace,monospace', hfont: '"Geist Mono",ui-monospace,monospace', case: 'none', radius: 0,
+    shapes: ['circulo', 'cuadrado'],
+    rules: { wmax: 500, angles: false, density: 0.3, border: 45, mono: true },
   },
 };
+
+// color de texto legible sobre un fondo (mezcla aproximada del color con el papel según el contraste)
+function hexRGB(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function lum([r, g, b]) {
+  const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function inkFor(bgHex, paperHex, amount, ink) {
+  const a = hexRGB(bgHex), b = hexRGB(paperHex);
+  const m = a.map((v, i) => v * amount + b[i] * (1 - amount));
+  const L = lum(m), Ld = lum(hexRGB(ink[0])), Ll = lum(hexRGB(ink[1]));
+  const cd = (Math.max(L, Ld) + 0.05) / (Math.min(L, Ld) + 0.05), cl = (Math.max(L, Ll) + 0.05) / (Math.min(L, Ll) + 0.05);
+  return cd >= cl ? ink[0] : ink[1];
+}
 
 const MAX = 64; // formas en la composición
 const W = 1000, H = 1000;
@@ -67,7 +89,7 @@ export function initDiales(root) {
   const words = h1.textContent.split(' ');
   const R = rng(7);
   h1.innerHTML = words
-    .map((w, wi) => `<span class="w${wi === 1 ? ' hlw' : ''}">` + [...w].map((ch) =>
+    .map((w, wi) => (wi === 1 ? '<span class="w hlw" style="--cc:var(--p1)" data-cc="p1" data-solid>' : '<span class="w">') + [...w].map((ch) =>
       `<span class="ch" aria-hidden="true" style="--rx:${(R() * 2 - 1).toFixed(3)};--ry:${(R() * 2 - 1).toFixed(3)};--rr:${(R() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
     .join(' ');
 
@@ -97,23 +119,27 @@ export function initDiales(root) {
     const { e, r, c, k } = state;
     const cols = Math.round(lerp(3, 9, r));
     const rows = Math.max(2, Math.round(cols * (H / W)));
-    const n = Math.min(MAX, cols * rows);
+    const B = BRANDS[state.b], rules = B.rules;
+    const cells = cols * rows;
+    const n = Math.min(MAX, Math.max(3, Math.round(cells * rules.density)));
+    const step = cells / n; // con menos densidad, las formas ocupan celdas salteadas: más espacio vacío
     const cw = W / cols, ch = H / rows;
     const base = Math.min(cw, ch) / 40 * lerp(0.45, 1.15, e);
     const pal = BRANDS[state.b].p;
     comp.querySelectorAll('g').forEach((g, i) => {
       const sd = seeds[i];
       if (i >= n) { g.style.opacity = '0'; g.style.transform = `translate(${W / 2}px,${H / 2}px) scale(0)`; return; }
-      const gx = (i % cols + 0.5) * cw, gy = (Math.floor(i / cols) + 0.5) * ch;
+      const cell = Math.floor(i * step);
+      const gx = (cell % cols + 0.5) * cw, gy = (Math.floor(cell / cols) + 0.5) * ch;
       const x = lerp(gx, sd.x * W, k), y = lerp(gy, sd.y * H, k);
       // rotación: a 0 el sistema es ortogonal (múltiplos de 90°), con caos se suelta
       const ortho = Math.round(sd.rot / 90) * 90;
-      const rot = lerp(ortho, sd.rot, k);
+      const rot = rules.angles ? lerp(ortho, sd.rot, k) : ortho;
       const sc = base * lerp(1, sd.s, k);
       g.style.opacity = '1';
       g.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc.toFixed(3)})`;
       // contraste bajo: todo en un solo tono; alto: paleta completa
-      const col = c < 0.25 ? 'var(--t)' : (i % 7 === 3 ? "var(--paper)" : `var(--p${(i + Math.floor(sd.pick * 5)) % 5})`);
+      const col = c < 0.25 || rules.mono ? 'var(--t)' : (i % 7 === 3 ? "var(--paper)" : `var(--p${(i + Math.floor(sd.pick * 5)) % 5})`);
       const op = lerp(0.25, 1, clamp01(c * 1.4));
       g.querySelectorAll('.sh').forEach((s) => {
         if (s.classList.contains('s')) s.style.stroke = col; else s.style.fill = col;
@@ -194,7 +220,16 @@ export function initDiales(root) {
     B.p.forEach((col, i) => s.setProperty('--p' + i, col));
     s.setProperty('--font', B.font); s.setProperty('--hfont', B.hfont); s.setProperty('--case', B.case);
     s.setProperty('--radius-card', String(B.radius));
-    s.setProperty('--ci', B.ci); s.setProperty('--paper', B.paper);
+    s.setProperty('--paper', B.paper); s.setProperty('--ci', B.ink[0]);
+    s.setProperty('--wmax', String(B.rules.wmax));
+    s.setProperty('--rot', B.rules.angles ? '1' : '0');
+    s.setProperty('--bdmin', B.rules.border + '%');
+    // cada bloque elige su tinta según su fondo real
+    root.querySelectorAll('[data-cc]').forEach((el) => {
+      const key = el.dataset.cc, solid = el.hasAttribute('data-solid');
+      const bg = key === 'paper' ? B.paper : B.p[Number(key.slice(1))];
+      el.style.setProperty('--ci', inkFor(bg, B.paper, solid ? 1 : state.c, B.ink));
+    });
     root.dataset.brand = state.b;
     root.querySelector('#wear').textContent = state.b === 'minervo' ? '' : '× ' + B.name;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', B.g);
