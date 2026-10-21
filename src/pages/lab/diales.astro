@@ -1,0 +1,156 @@
+---
+// Laboratorio — fase 1 del concepto "la web es el sistema".
+// Cuatro diales rediseñan la página en vivo; "vestir" la pone con la identidad de otra marca.
+// Cada combinación es una edición numerada que se comparte por URL.
+import Base from '../../layouts/Base.astro';
+---
+<Base title="minərvo — diales (laboratorio)" description="Prototipo: la web es el sistema." noindex>
+  <div class="dl" id="dl" data-brand="minervo">
+    <header class="dl-nav">
+      <span class="dl-wm"><span id="wm">minərvo</span><i>.</i><span class="dl-wear" id="wear"></span></span>
+      <span class="mono dl-ed" id="edTop">edición nº —</span>
+    </header>
+
+    <main id="contenido" class="dl-page">
+      <section class="dl-hero">
+        <p class="mono dl-kicker">estudio de sistemas de marca · cuenca</p>
+        <h1 class="dl-h1" id="h1" aria-label="Diseñamos sistemas, no páginas.">Diseñamos sistemas, no páginas.</h1>
+        <svg class="dl-comp" id="comp" viewBox="0 0 1000 560" aria-hidden="true"></svg>
+      </section>
+
+      <section class="dl-services" aria-label="Servicios">
+        <article class="dl-card"><span class="mono">01</span><h2>Identidad viva</h2><p>Marcas que se comportan, no solo se ven.</p></article>
+        <article class="dl-card"><span class="mono">02</span><h2>Web y producto</h2><p>Diseño y código en el mismo equipo.</p></article>
+        <article class="dl-card"><span class="mono">03</span><h2>Motion</h2><p>Sistemas que se mueven con intención.</p></article>
+        <article class="dl-card"><span class="mono">04</span><h2>Experiencias</h2><p>Instalaciones, eventos y lo que no tiene nombre aún.</p></article>
+      </section>
+
+      <section class="dl-work" aria-label="Trabajo">
+        <a class="dl-row" href="#"><span class="mono">2026</span><b>Caso uno</b><span class="mono">identidad · web</span></a>
+        <a class="dl-row" href="#"><span class="mono">2025</span><b>Caso dos</b><span class="mono">motion · producto</span></a>
+        <a class="dl-row" href="#"><span class="mono">2025</span><b>Caso tres</b><span class="mono">experiencia</span></a>
+      </section>
+    </main>
+
+    <aside class="dl-console" aria-label="Diales del sistema">
+      <div class="dl-knobs" id="knobs"></div>
+      <div class="dl-actions">
+        <div class="dl-brands" role="group" aria-label="Vestir la web">
+          <span class="mono">vestir</span>
+          <button class="dl-btn" data-brand="minervo" aria-pressed="true">minərvo</button>
+          <button class="dl-btn" data-brand="nordika" aria-pressed="false">nórdika<sup>lab</sup></button>
+          <button class="dl-btn" data-brand="pulpa" aria-pressed="false">pulpa<sup>lab</sup></button>
+        </div>
+        <div class="dl-brands">
+          <button class="dl-btn" id="dice" title="combinación al azar">azar</button>
+          <button class="dl-btn solid" id="save">guardar edición</button>
+        </div>
+      </div>
+      <p class="sr-only" aria-live="polite" id="live"></p>
+    </aside>
+  </div>
+</Base>
+
+<script>
+  import { initDiales } from '../../scripts/diales.js';
+  initDiales(document.getElementById('dl'));
+</script>
+
+<style is:global>
+  @property --g{syntax:'<color>';inherits:true;initial-value:#0b0b0d}
+  @property --t{syntax:'<color>';inherits:true;initial-value:#f3f0e8}
+  @property --p0{syntax:'<color>';inherits:true;initial-value:#8edcb2}
+  @property --p1{syntax:'<color>';inherits:true;initial-value:#ec5b2c}
+  @property --p2{syntax:'<color>';inherits:true;initial-value:#f2b83b}
+  @property --p3{syntax:'<color>';inherits:true;initial-value:#2e7d46}
+  @property --p4{syntax:'<color>';inherits:true;initial-value:#f29bc0}
+  @property --p5{syntax:'<color>';inherits:true;initial-value:#6b54b0}
+
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .skip{position:absolute;left:-9999px}
+  .dl{
+    /* diales 0–1, los escribe el script */
+    --e:.5; --r:.5; --c:.5; --k:0;
+    --s:calc(.72 + var(--e) * .9);
+    --w:calc(260 + var(--c) * 600);
+    --gap:calc((10px + (1 - var(--r)) * 40px) * var(--s));
+    --radius:999px;
+    --font:var(--display);
+    --hfont:var(--display);
+    --case:none;
+    min-height:100dvh;background:var(--g);color:var(--t);font-family:var(--font);
+    transition:--g .7s,--t .7s,--p0 .7s,--p1 .7s,--p2 .7s,--p3 .7s,--p4 .7s,--p5 .7s;
+    padding-bottom:220px;overflow-x:hidden;
+  }
+  .dl.no-tr,.dl.no-tr *{transition:none!important}
+  .dl-nav{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:18px max(16px,4vw);background:linear-gradient(var(--g) 60%,transparent)}
+  .dl-wm{font-size:22px;font-weight:500;letter-spacing:-.02em}
+  .dl-wm i{font-style:normal;color:var(--p0)}
+  .dl-wear{color:color-mix(in oklab,var(--t) 55%,var(--g));font-size:.7em;margin-left:.4em}
+  .dl-ed{color:color-mix(in oklab,var(--t) 60%,var(--g))}
+  .dl-page{padding:0 max(16px,4vw)}
+  .dl-kicker{color:color-mix(in oklab,var(--t) 60%,var(--g));margin:calc(24px * var(--s)) 0 0}
+  .dl-h1{
+    font-family:var(--hfont);text-transform:var(--case);font-weight:var(--w);
+    font-size:calc(clamp(40px,8.5vw,128px) * var(--s));line-height:calc(1.05 - var(--r) * .12);
+    letter-spacing:calc(-.02em - var(--c) * .02em);margin:.2em 0 .3em;max-width:14ch;
+    font-variation-settings:"wght" var(--w);transition:font-size .5s,line-height .5s,letter-spacing .5s,font-weight .5s;
+  }
+  .dl-h1 .ch{display:inline-block;transform:translate(calc(var(--rx) * var(--k) * .12em),calc(var(--ry) * var(--k) * .2em)) rotate(calc(var(--rr) * var(--k) * 18deg));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+  .dl-h1 .ch.hl{color:var(--p4)}
+  .dl-comp{display:block;width:100%;height:auto;margin:0 0 calc(40px * var(--s));overflow:visible}
+  .dl-comp g{transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .4s;transform-box:view-box}
+  .dl-comp .sh{transition:fill .7s,stroke .7s}
+
+  .dl-services{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(160px + var(--r) * -40px + var(--e) * 120px),1fr));gap:var(--gap);margin-bottom:calc(64px * var(--s))}
+  .dl-card{
+    --bg:color-mix(in oklab,var(--cc) calc(var(--c) * 100%),var(--g));
+    background:var(--bg);color:var(--t);border:1px solid color-mix(in oklab,var(--t) calc((1 - var(--c)) * 30%),transparent);
+    border-radius:calc(var(--radius-card) * 1px);padding:calc(20px * var(--s));min-height:calc(180px * var(--s));
+    display:flex;flex-direction:column;gap:8px;
+    transform:rotate(calc(var(--rr) * var(--k) * 7deg)) translateY(calc(var(--ry) * var(--k) * 30px));
+    transition:transform .6s cubic-bezier(.2,.8,.2,1),border-radius .5s,padding .5s,min-height .5s;
+  }
+  .dl[data-dark-cards] .dl-card{color:var(--g)}
+  .dl-card:nth-child(1){--cc:var(--p0)} .dl-card:nth-child(2){--cc:var(--p1)} .dl-card:nth-child(3){--cc:var(--p2)} .dl-card:nth-child(4){--cc:var(--p5)}
+  .dl-card h2{font-family:var(--hfont);text-transform:var(--case);font-weight:var(--w);font-size:calc(26px * var(--s));line-height:1.05;margin:auto 0 0;font-variation-settings:"wght" var(--w)}
+  .dl-card p{margin:0;font-size:calc(15px * min(var(--s),1.15));opacity:.85}
+  .dl-card .mono{opacity:.7}
+
+  .dl-work{border-top:1px solid color-mix(in oklab,var(--t) 25%,var(--g));margin-bottom:64px}
+  .dl-row{display:grid;grid-template-columns:80px 1fr auto;align-items:baseline;gap:16px;padding:calc(18px * var(--s)) 0;border-bottom:1px solid color-mix(in oklab,var(--t) 25%,var(--g));text-decoration:none;transform:translateX(calc(var(--rx) * var(--k) * 60px));transition:transform .6s,padding .5s}
+  .dl-row b{font-family:var(--hfont);text-transform:var(--case);font-weight:var(--w);font-size:calc(clamp(24px,4vw,48px) * var(--s));line-height:1;font-variation-settings:"wght" var(--w)}
+  .dl-row .mono{color:color-mix(in oklab,var(--t) 60%,var(--g))}
+  .dl-row:hover b{color:var(--p0)}
+  @media (max-width:600px){.dl-row{grid-template-columns:1fr}.dl-row .mono:last-child{display:none}}
+
+  /* consola */
+  .dl-console{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;width:min(760px,calc(100vw - 24px));
+    background:#111114f2;color:#f3f0e8;border:1px solid #2a2a2e;border-radius:24px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;
+    box-shadow:0 20px 60px #0008;backdrop-filter:blur(12px);font-family:var(--display)}
+  .dl-knobs{display:flex;gap:14px}
+  .knob{display:flex;flex-direction:column;align-items:center;gap:4px;touch-action:none;cursor:ns-resize;user-select:none;-webkit-user-select:none;border-radius:12px;padding:2px}
+  .knob svg{width:60px;height:60px;display:block}
+  .knob .mono{font-size:10px;line-height:12px;color:#9c9aa2}
+  .knob .val{color:#f3f0e8}
+  .knob:focus-visible{outline:2px solid #8edcb2;outline-offset:2px}
+  .knob .cap{transition:transform .08s}
+  .dl-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .dl-brands{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  .dl-brands>.mono{color:#9c9aa2;margin-right:2px}
+  .dl-btn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #3a3a40;background:transparent;color:#f3f0e8;cursor:pointer}
+  .dl-btn sup{font-size:8px;margin-left:2px;color:#9c9aa2}
+  .dl-btn[aria-pressed="true"]{background:#f3f0e8;color:#0b0b0d;border-color:#f3f0e8}
+  .dl-btn.solid{background:#8edcb2;color:#0b0b0d;border-color:#8edcb2}
+  @media (max-width:600px){
+    .dl-console{border-radius:18px;padding:10px;gap:10px;justify-content:center}
+    .dl-knobs{gap:6px;width:100%;justify-content:space-around}
+    .knob svg{width:52px;height:52px}
+    .dl-actions{align-items:center;width:100%}
+    .dl-brands{justify-content:center}
+  }
+  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+  ::view-transition-new(root){animation:dl-wipe .8s cubic-bezier(.7,0,.2,1)}
+  @keyframes dl-wipe{from{clip-path:circle(0 at var(--vx,50%) var(--vy,100%))}to{clip-path:circle(150% at var(--vx,50%) var(--vy,100%))}}
+  @media (prefers-reduced-motion:reduce){.dl *{transition:none!important}::view-transition-new(root){animation:none}}
+</style>

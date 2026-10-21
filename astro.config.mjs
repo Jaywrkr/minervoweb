@@ -6,5 +6,5 @@ export default defineConfig({
   trailingSlash: 'ignore',
   // CSS en línea: evita una petición que bloquea el primer pintado
   build: { inlineStylesheets: 'always' },
-  integrations: [sitemap({ filter: (page) => !page.includes('/404') && !page.includes('/prototipos/') })],
+  integrations: [sitemap({ filter: (page) => !page.includes('/404') && !page.includes('/prototipos/') && !page.includes('/lab/') })],
 });
