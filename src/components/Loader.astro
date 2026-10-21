@@ -1,9 +1,13 @@
 ---
 // Pantalla de carga: las formas arman la ə aquí y luego se rompen hacia la home.
-// Si el script no corre, se oculta sola a los 4 s (ver .loader en global.css).
+// Espera a que el visitante elija entrar con o sin sonido. Si el script no corre, se oculta sola (ver .loader en global.css).
 ---
-<div class="loader" id="loader" aria-hidden="true">
+<div class="loader" id="loader" role="dialog" aria-label="Bienvenida">
   <div class="loader-anchor" data-anchor></div>
+  <div class="loader-enter">
+    <button type="button" class="pill menta" data-enter="sound">entrar con sonido</button>
+    <button type="button" class="pill ghost" data-enter="mute">sin sonido</button>
+  </div>
   <div class="loader-foot">
     <span class="mono">minərvo.studio</span>
     <span class="mono">experiencias que se mueven</span>

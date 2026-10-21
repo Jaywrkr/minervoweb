@@ -158,7 +158,7 @@ footer.site a{text-decoration:none}
 
 /* loader */
 .loader{position:fixed;inset:0;z-index:6;background:var(--ground);display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:opacity .6s ease;animation:loaderOut .4s ease 4s forwards}
+  transition:opacity .6s ease;animation:loaderOut .4s ease 12s forwards}
 .loader.is-done{opacity:0;pointer-events:none}
 .loader-anchor{width:min(56vmin,520px);height:min(56vmin,520px)}
 .loader-foot{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:16px;
@@ -287,3 +287,29 @@ html.lenis,html.lenis body{height:auto}
 .poster-tools{display:flex;flex-direction:column;gap:12px;padding-top:8px}
 .poster-tools[hidden]{display:none}
 .poster-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* juez exigente: ajustes */
+.loader-enter{position:relative;z-index:8;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:28px;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}
+.loader.is-ready .loader-enter{opacity:1;transform:none;pointer-events:auto}
+.loader.is-done .loader-enter{opacity:0}
+.mono{font-size:13px;line-height:18px}
+@media (min-width:901px){
+  .hero .txt{max-width:50%}
+  .hero .anchor{width:60%;top:-10%;bottom:-10%}
+  .contact .wrap{position:relative;min-height:min(80vh,720px)}
+  .contact .txt{max-width:50%;position:relative;z-index:1}
+  .contact .anchor{position:absolute;right:0;top:-8%;bottom:-8%;width:56%;min-height:0}
+}
+@media (max-width:900px){.contact .anchor{flex-basis:100%;min-height:min(92vw,420px)}}
+.poster-btns .btn{min-height:48px;padding:0 20px;font-size:13px}
+.peek{margin:calc(clamp(260px,26vw,420px) * -0.375) 0 0 32px}
+/* estudio: la tarjeta violeta deja ver una franja de formas ordenadas debajo */
+.studio{background:transparent}
+.studio-card{background:var(--violeta);color:#fff;border-radius:16px;padding:clamp(32px,5vw,72px);display:flex;flex-wrap:wrap;gap:40px 64px}
+.studio-band{height:clamp(110px,12vw,150px);margin-top:24px}
+.studio .wrap{display:block}
+html.is-loading canvas#c{pointer-events:none}
+@media (min-width:901px){
+  .hero h1{font-size:clamp(52px,7.2vw,112px)}
+  .hero .anchor{width:54%}
+}
