@@ -9,12 +9,27 @@ import Pads from './Pads.astro';
 <script>
   import { initFormas } from '../scripts/formas.js';
   import { initCursor, initReveal, initMagnetic, initSmoothScroll, initScrub, initInstruments, initPoster } from '../scripts/motion.js';
+  import { supports3D } from '../scripts/support3d.js';
+
+  // 3D si el equipo lo soporta (WebGL y sin movimiento reducido); si no, la escena 2D de siempre.
+  // El motor 3D se carga aparte para que el 2D no pague su peso. ?escena=2d fuerza el 2D.
+  let render3d = null;
+  if (supports3D()) {
+    try {
+      const { createRender3D } = await import('../scripts/render3d.js');
+      const css = getComputedStyle(document.documentElement);
+      render3d = createRender3D((t: string) => css.getPropertyValue('--' + t).trim());
+      document.documentElement.classList.add('is-3d');
+    } catch (e) { render3d = null; }
+  }
+
   const scene = initFormas({
     canvas: document.getElementById('c') as HTMLCanvasElement,
     soundButton: document.getElementById('sound'),
     soundLabel: document.getElementById('soundTxt'),
     pads: document.getElementById('pads'),
     loader: document.getElementById('loader'),
+    render3d,
   });
   initSmoothScroll();
   initScrub();

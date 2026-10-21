@@ -14,7 +14,10 @@ src/
   pages/index.astro      home one-page
   components/            secciones (Hero, Work, Services, Manifesto, Studio, Contact…)
   data/content.js        textos, casos, servicios y datos de contacto ([PLACEHOLDERS])
-  scripts/formas.js      escena de formas: física, formaciones por scroll, pads
+  scripts/formas.js      escena de formas: física 2D, formaciones por scroll, pads
+  scripts/render3d.js    render 3D de las formas (Three.js): luz, sombras, materiales
+  scripts/support3d.js   decide 3D o 2D (sin WebGL, movimiento reducido o ?escena=2d → 2D)
+  pages/lab/3d.astro     laboratorio 3D (fuera del sitemap)
   scripts/audio.js       sonido sintetizado de cada forma
   scripts/formations.js  puntos de la ə, grillas y franjas op-art
   scripts/kinds.js       las 6 formas, colores e iconos
@@ -33,4 +36,4 @@ npm run dev      # http://localhost:4321
 npm run build    # sitio estático en dist/
 ```
 
-Stack: Astro + Matter.js. Fuentes propias en `public/fonts` (Geist, Geist Mono y Anton, licencia SIL OFL).
+Stack: Astro + Matter.js (física) + Three.js (render 3D). Fuentes propias en `public/fonts` (Geist, Geist Mono y Anton, licencia SIL OFL).

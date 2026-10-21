@@ -14,7 +14,7 @@ const { Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Query }
 const ALL = 0xffffffff;
 const MAX_SHAPES = 110;
 
-export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl }) {
+export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl, render3d = null }) {
   const css = getComputedStyle(document.documentElement);
   const color = (token) => css.getPropertyValue('--' + token).trim();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -26,6 +26,8 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       if (soundLabel) soundLabel.textContent = on ? 'sonido on' : 'sonido';
     },
   });
+
+  if (render3d) canvas.after(render3d.el);
 
   /* ---------- física ---------- */
   const ctx = canvas.getContext('2d');
@@ -294,6 +296,12 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       if (r.bottom < 0 || r.top > H) continue;
       for (let y = r.top; y < r.bottom; y += 16) ctx.fillRect(r.left, y, r.width, 8);
     }
+    if (render3d) {
+      // modo 3D: el canvas 2D solo dibuja las franjas; las formas las dibuja el render 3D
+      for (const b of shapes) if (b.plugin.flash > 0.03) b.plugin.flash *= 0.88;
+      render3d.render(shapes);
+      return;
+    }
     for (const b of shapes) {
       const { kind, color: c } = b.plugin;
       ctx.fillStyle = c; ctx.strokeStyle = c;
@@ -331,6 +339,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
     canvas.setAttribute('data-pixel-ratio', DPR);
     S = Math.max(22, Math.min(52, Math.min(W, H) / 15));
+    render3d?.resize(W, H);
     makeWalls();
     if (modeSec) setMode(modeSec, true);
   }
