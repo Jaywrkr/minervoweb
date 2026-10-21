@@ -212,3 +212,28 @@ export function initInstruments(scene) {
     card.addEventListener('focusout', stop);
   });
 }
+
+/* ---------- póster descargable ---------- */
+// En contacto, el visitante remezcla la ə y la descarga como póster 1080×1350.
+export function initPoster(scene) {
+  const box = document.querySelector('[data-poster]');
+  if (!box || !scene?.poster) return;
+  const section = box.closest('section');
+  const anchor = section?.querySelector('[data-anchor]');
+  if (!anchor) return;
+  box.hidden = false;
+  box.querySelector('[data-remix]')?.addEventListener('click', () => scene.remix());
+  box.querySelector('[data-download]')?.addEventListener('click', () => {
+    const d = new Date();
+    const serial = `nº ${String(d.getTime()).slice(-5)} · ${d.toLocaleDateString('es-EC')}`;
+    const c = scene.poster(anchor, { serial });
+    c.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'minervo-poster.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  });
+}
