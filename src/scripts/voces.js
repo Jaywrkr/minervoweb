@@ -68,4 +68,27 @@ export const VOICES = {
     ],
     art: [],
   },
+
+  // ANKLA: cercana, en "tú", honesta con el fallo, sin gurús. Titular fino que remata en negrita.
+  ankla: {
+    kicker: 'SISTEMA GUIADO DE MARCA SOSTENIBLE',
+    h1: 'No es diseño bonito. Es un sistema al que tu marca puede volver.', hl: -1, boldFrom: 4,
+    lead: 'Basado en lo esencial: el 20% de las decisiones hace el 80% de tu marca. Menos piezas. Más continuidad. Sin gurús.',
+    cta: 'EMPEZAR GRATIS',
+    nav: ['trabajo', 'el sistema', 'estudio', 'contacto'],
+    nums: ['01', '02', '03', '04'],
+    ticker: ['día 1', 'día 7', 'día 30', 'racha', 'sin culpa', 'vuelve cuando falles'], sep: '·',
+    services: [
+      { t: 'Aprendizaje', d: 'Entiendes tu marca antes de diseñarla.', l: ['Diagnóstico', 'Radar de marca', 'Prioridades'] },
+      { t: 'Acción', d: 'Un paso que puedes dar incluso en un día malo.', l: ['Identidad', 'Web', 'Contenido'] },
+      { t: 'Control', d: 'Mides cada 30 días. Ajustas. Sigues.', l: ['Métricas', 'Revisión', 'Racha'] },
+      { t: 'Ritmo', d: 'Puntos de progreso, no presión.', l: ['Motion', 'Experiencias', 'Comunidad'] },
+    ],
+    work: [
+      { t: 'Caso uno', m: 'DÍA 1 → DÍA 240 · identidad' },
+      { t: 'Caso dos', m: 'DÍA 1 → DÍA 90 · motion' },
+      { t: 'Caso tres', m: 'DÍA 1 → DÍA 30 · experiencia' },
+    ],
+    art: ['identidad', 'web', 'motion', 'voz', 'redes', 'experiencia', 'producto', 'equipo'],
+  },
 };

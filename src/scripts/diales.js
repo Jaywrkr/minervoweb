@@ -42,6 +42,14 @@ const BRANDS = {
     shapes: ['circulo', 'cuadrado'],
     rules: { wmax: 500, angles: false, density: 0.3, border: 45, mono: true },
   },
+  // ANKLA: negro, Geist Mono fino con remate en negrita, salvia y terracota, radar de vida en vez de formas
+  ankla: {
+    name: 'ankla', g: '#0a0a0a', t: '#f5f5f5', ink: ['#0a0a0a', '#f5f5f5'], paper: '#0a0a0a',
+    p: ['#a3ad86', '#d97757', '#171717', '#171717', '#171717', '#0f0f0f'],
+    font: '"Geist Mono Var","Geist Mono",ui-monospace,monospace', hfont: '"Geist Mono Var","Geist Mono",ui-monospace,monospace', case: 'none', radius: 8,
+    shapes: ['circulo'],
+    rules: { wmax: 900, angles: true, density: 1, border: 15, mono: true, radar: true },
+  },
 };
 
 // color de texto legible sobre un fondo (mezcla aproximada del color con el papel según el contraste)
@@ -90,12 +98,12 @@ export function initDiales(root) {
 
   /* ---------- titular: cada letra con su propio azar ---------- */
   const h1 = root.querySelector('#h1');
-  function buildH1(text, hl) {
+  function buildH1(text, hl, boldFrom = 99) {
     const Rh = rng(7);
     h1.setAttribute('aria-label', text);
     let li = 0;
     h1.innerHTML = text.split(' ')
-      .map((w, wi) => (wi === hl ? `<span class="w hlw" style="--cc:var(--p1);--hl0:${li}" data-cc="p1" data-solid>` : '<span class="w">') + [...w].map((ch) =>
+      .map((w, wi) => (wi === hl ? `<span class="w hlw" style="--cc:var(--p1);--hl0:${li}" data-cc="p1" data-solid>` : `<span class="w${wi >= boldFrom ? ' bw' : ''}" style="--w0:${li}">`) + [...w].map((ch) =>
         `<span class="ch" aria-hidden="true" style="--li:${li++};--rx:${(Rh() * 2 - 1).toFixed(3)};--ry:${(Rh() * 2 - 1).toFixed(3)};--rr:${(Rh() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
       .join(' ') + '<span class="caret" aria-hidden="true"></span>';
   }
@@ -113,7 +121,7 @@ export function initDiales(root) {
       const v = el.dataset.t.split('.').reduce((o, k) => (o == null ? o : o[k]), V);
       el.textContent = v ?? '';
     });
-    buildH1(V.h1, V.hl);
+    buildH1(V.h1, V.hl, V.boldFrom);
     const items = V.ticker.map((t) => `<span>${t}<i>${V.sep}</i></span>`).join('');
     track.innerHTML = items + items;
     vida.brand(brand, first);
@@ -175,8 +183,27 @@ export function initDiales(root) {
         s.style.opacity = op.toFixed(2);
       });
     });
-    // capa técnica (Coresolutions): enlaces entre nodos y etiquetas de datos en mono
     const ov = comp.querySelector('.ov');
+    // ANKLA: un radar de vida en lugar de formas; cada dial mueve sus áreas
+    if (rules.radar) {
+      comp.querySelectorAll('g[data-i]').forEach((g) => { g.style.opacity = '0'; });
+      const L = (VOICES[state.b] || {}).art || [];
+      const N = L.length, cx = 500, cy = 520, Rr = 300 * lerp(0.8, 1.1, e);
+      const vals = [e, r, c, 1 - k, (e + c) / 2, (r + k) / 2, 1 - e * 0.5, c * 0.8 + 0.2]
+        .map((v, i) => clamp01(0.25 + 0.75 * v + (seeds[i].x - 0.5) * k * 0.5));
+      const at = (i, f) => { const a = -Math.PI / 2 + (i / N) * Math.PI * 2; return [cx + Math.cos(a) * Rr * f, cy + Math.sin(a) * Rr * f]; };
+      const poly = vals.map((v, i) => at(i, v)).map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('') + 'Z';
+      let svg = [0.25, 0.5, 0.75, 1].map((f) => `<polygon points="${L.map((_, i) => at(i, f).map((n) => n.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-opacity=".16"/>`).join('');
+      svg += L.map((_, i) => { const [x, y] = at(i, 1); return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="currentColor" stroke-opacity=".16"/>`; }).join('');
+      svg += L.map((t, i) => { const [x, y] = at(i, 1.17); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Geist Mono, monospace" font-size="20" fill="currentColor" fill-opacity=".7">● ${t}</text>`; }).join('');
+      svg += `<g class="rd"><path class="rd-poly" style="d:path('${poly}')" fill="#a3ad86" fill-opacity=".22" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>` +
+        vals.map((v, i) => { const [x, y] = at(i, v); return `<circle class="rd-dot" style="--d:${i * 0.3}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="currentColor"/>`; }).join('') + '</g>';
+      const day = Math.max(1, Math.round(lerp(1, 240, (e + r + c) / 3)));
+      svg += `<g transform="translate(70 70) rotate(-6)"><rect width="230" height="108" rx="8" fill="#171717" stroke="#3a3a3a"/><text x="24" y="58" font-family="Geist Mono, monospace" font-size="40" font-weight="700" fill="#f5f5f5">Día ${day}</text><text x="24" y="88" font-family="Geist Mono, monospace" font-size="16" letter-spacing="3" fill="#a3a3a3">RACHA</text></g>`;
+      ov.innerHTML = svg;
+      return;
+    }
+    // capa técnica (Coresolutions): enlaces entre nodos y etiquetas de datos en mono
     const labels = (VOICES[state.b] || {}).art || [];
     if (!rules.links || !pts.length) { if (ov) ov.innerHTML = ''; return; }
     let d = '';

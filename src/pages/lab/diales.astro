@@ -65,6 +65,7 @@ const workCC = ['p5', 'p3', 'p4'];
           <button class="dl-btn" data-brand="minervo" aria-pressed="true">minərvo</button>
           <button class="dl-btn" data-brand="coresolutions" aria-pressed="false">coresolutions</button>
           <button class="dl-btn" data-brand="jay" aria-pressed="false">jay jaramillo</button>
+          <button class="dl-btn" data-brand="ankla" aria-pressed="false">ankla</button>
         </div>
         <div class="dl-brands">
           <button class="dl-btn" id="dice" title="combinación al azar">azar</button>
@@ -85,6 +86,7 @@ const workCC = ['p5', 'p3', 'p4'];
   @font-face{font-family:"Bricolage";src:url("/fonts/BricolageGrotesque-Variable.woff2") format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
   @font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
   @font-face{font-family:"IBM Plex Sans";src:url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2");font-weight:600;font-display:swap}
+  @font-face{font-family:"Geist Mono Var";src:url("/fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
   @property --g{syntax:'<color>';inherits:true;initial-value:#f4ebe1}
   @property --t{syntax:'<color>';inherits:true;initial-value:#0b0b0d}
   @property --ci{syntax:'<color>';inherits:true;initial-value:#0b0b0d}
@@ -342,6 +344,37 @@ const workCC = ['p5', 'p3', 'p4'];
   html[data-vt=jay]::view-transition-new(root){animation:dl-vt-in .9s .35s ease both}
   @keyframes dl-vt-out{to{opacity:0}}
   @keyframes dl-vt-in{from{opacity:0}}
+
+  /* ===== ANKLA: negro, mono fino que remata en negrita, píldoras en mayúsculas, salvia y terracota, radar ===== */
+  [data-brand=ankla]{--ease:cubic-bezier(.16,1,.3,1);--dur:.7s;--enter:dl-rise;--edur:.9s;--eease:cubic-bezier(.16,1,.3,1);--stag:90ms;--idle:dl-breathe;--idur:5s}
+  @keyframes dl-rise{0%{opacity:0;translate:0 28px;filter:blur(6px)}100%{opacity:1;translate:0 0;filter:blur(0)}}
+  [data-brand=ankla] .dl-card{border-color:#262626}
+  [data-brand=ankla] .dl-hero{justify-content:center;gap:24px}
+  [data-brand=ankla] .dl-h1{font-weight:100;font-variation-settings:"wght" 100;font-size:min(calc(clamp(40px,6vw,96px) * var(--s)),72px);letter-spacing:-.025em;line-height:1.08;max-width:15ch;margin:0}
+  [data-brand=ankla] .dl-h1 .bw{font-weight:800;font-variation-settings:"wght" 800}
+  [data-brand=ankla] .dl-lead{font-size:14px;max-width:46ch;color:#a3a3a3;line-height:1.6}
+  [data-brand=ankla] .dl-pill{background:#171717;border:1px solid #262626;color:#f5f5f5;text-transform:uppercase;font-size:11px;font-weight:700;letter-spacing:.08em;min-height:28px}
+  [data-brand=ankla] .dl-cta{background:#f5f5f5;color:#0a0a0a!important;text-transform:uppercase;font-size:13px;letter-spacing:.08em;font-weight:500;min-height:48px;padding:0 26px}
+  [data-brand=ankla] .dl-cta:hover{transform:translateY(-2px);box-shadow:0 0 0 6px rgba(245,245,245,.08)}
+  [data-brand=ankla] .dl-tile{height:56px;border:1px solid #262626}
+  [data-brand=ankla] .dl-tile b{text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+  [data-brand=ankla] .dl-ticker{border-color:#262626}
+  [data-brand=ankla] .dl-track span{text-transform:uppercase;letter-spacing:.1em;font-size:14px;font-weight:300}
+  [data-brand=ankla] .dl-services h2{font-weight:200;font-variation-settings:"wght" 200;letter-spacing:-.02em}
+  [data-brand=ankla] .dl-services li{border-color:color-mix(in oklab,currentColor 18%,transparent);font-size:13px}
+  [data-brand=ankla] .dl-meta b{font-weight:200}
+  [data-brand=ankla] .dl-meta span{text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+  [data-brand=ankla] .dl-services .dl-card:hover,[data-brand=ankla] .dl-case:hover{translate:0 -4px;border-color:#525252}
+  [data-brand=ankla] .dl-h1.h-in .ch{animation:dl-rise .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--li) * 14ms + 100ms)}
+  [data-brand=ankla] .dl-h1.h-in .bw .ch{animation:dl-slam .6s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--li) * 14ms + 500ms)}
+  @keyframes dl-slam{0%{opacity:0;scale:1.6;filter:blur(8px)}100%{opacity:1;scale:1;filter:blur(0)}}
+  .dl-comp .rd{transform-box:fill-box;transform-origin:center;animation:dl-breathe 5s ease-in-out infinite alternate}
+  .dl-comp .rd-poly{transition:d .7s cubic-bezier(.16,1,.3,1)}
+  .dl-comp .rd-dot{animation:dl-led 2.4s ease-in-out infinite;animation-delay:calc(var(--d) * 1s);transition:cx .7s cubic-bezier(.16,1,.3,1),cy .7s cubic-bezier(.16,1,.3,1)}
+  [data-brand=ankla] .dl-cur::before{left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:none;border:1.5px solid #f5f5f5;mix-blend-mode:difference}
+  [data-brand=ankla] .dl-cur.is-hot::before{background:#f5f5f5;scale:1.6}
+  html[data-vt=ankla]::view-transition-new(root){animation:dl-vt-ankla .9s cubic-bezier(.16,1,.3,1)}
+  @keyframes dl-vt-ankla{from{clip-path:circle(0 at 50% 50%);filter:blur(10px)}to{clip-path:circle(150% at 50% 50%);filter:blur(0)}}
   @media (prefers-reduced-motion:reduce){.dl.rv-on [data-rv]{opacity:1}.dl-comp .fl{animation:none}}
   @media (prefers-reduced-motion:reduce){.dl *{transition:none!important;animation:none!important}::view-transition-new(root){animation:none}}
 </style>
