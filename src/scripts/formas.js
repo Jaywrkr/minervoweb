@@ -12,7 +12,7 @@ import { glyphPoints, gridPoints, stripePoints, framePoints } from './formations
 
 const { Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Query } = Matter;
 const ALL = 0xffffffff;
-const MAX_SHAPES = 72;
+const MAX_SHAPES = 110;
 
 export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl }) {
   const css = getComputedStyle(document.documentElement);
@@ -118,15 +118,19 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   // Asigna formas para dibujar la ə dentro de `el`. El punto siempre son círculos menta.
   function formGlyph(el, shuffle = false) {
     const r = el.getBoundingClientRect();
-    const want = Number(el.dataset.want) || 46;
+    const base = Number(el.dataset.want) || 46;
+    const want = W < 700 ? Math.round(base * 0.65) : base;
     const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(want, Math.max(shapes.length, want - 18)));
     const circles = shapes.filter((b) => b.plugin.kind.id === 'circulo');
     while (circles.length < dot.length) circles.push(spawn(KINDS[0]));
     while (shapes.length < glyph.length + dot.length) spawn(KINDS[1 + Math.floor(Math.random() * 5)]);
     circles.slice().sort(byX).reverse().slice(0, dot.length)
       .forEach((b, i) => setTarget(b, el, dot[i].x, dot[i].y, p));
-    const rest = shapes.filter((b) => !assign.has(b)).sort(byX);
-    const pts = glyph.slice().sort((a, b) => a.x - b.x);
+    // franjas de color: las formas van agrupadas por tipo y los puntos por filas,
+    // así la ə se lee como una letra con bandas y no como un racimo de piezas sueltas
+    const order = (b) => KINDS.indexOf(b.plugin.kind);
+    const rest = shapes.filter((b) => !assign.has(b)).sort((a, b) => order(a) - order(b) || byX(a, b));
+    const pts = glyph.slice().sort((a, b) => a.y - b.y || a.x - b.x);
     if (shuffle) rest.sort(() => Math.random() - 0.5); // remezcla: cada pieza va a otro lugar
     rest.forEach((b, i) => { if (i < pts.length) setTarget(b, el, pts[i].x, pts[i].y, p); });
   }
@@ -392,7 +396,17 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       }
       shapes.filter((b) => !assign.has(b)).forEach((b) => Body.setPosition(b, { x: b.position.x, y: -S * 4 }));
       modeType = 'glyph';
-      setTimeout(() => {
+      // la ə armada espera a que el visitante elija entrar con o sin sonido (el clic habilita el audio);
+      // si no elige en 8 s, entra sin sonido
+      const choose = new Promise((resolve) => {
+        loader.classList.add('is-ready');
+        const buttons = [...loader.querySelectorAll('[data-enter]')];
+        buttons.forEach((btn) => btn.addEventListener('click', () => resolve(btn.dataset.enter === 'sound'), { once: true }));
+        buttons[0]?.focus({ preventScroll: true });
+        setTimeout(() => resolve(null), 8000);
+      });
+      choose.then((withSound) => {
+        if (withSound !== null) audio.choose(withSound);
         loader.classList.add('is-done');
         releaseInOrder(); // se desarma pieza por pieza, de arriba hacia abajo, como un redoble
         window.dispatchEvent(new CustomEvent('mnv:intro'));
@@ -402,7 +416,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
           loader.remove();
         }, 700);
         formHero(1800);
-      }, 1300);
+      });
     });
   } else {
     loaderEl?.remove();
