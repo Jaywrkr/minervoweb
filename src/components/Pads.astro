@@ -1,0 +1,10 @@
+---
+import { KINDS, ICONS } from '../scripts/kinds.js';
+---
+<div class="keys" id="pads" role="group" aria-label="Soltar formas">
+  {KINDS.map((k) => (
+    <button type="button" class="key" data-key={k.key} aria-label={`Soltar ${k.name} (tecla ${k.key.toUpperCase()})`}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" set:html={ICONS[k.id]} />
+    </button>
+  ))}
+</div>

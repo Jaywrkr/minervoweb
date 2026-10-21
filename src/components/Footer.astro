@@ -1,0 +1,14 @@
+---
+import Wordmark from './Wordmark.astro';
+import { contact } from '../data/content.js';
+---
+<footer class="site">
+  <div class="wrap">
+    <span class="wm"><Wordmark /></span>
+    <nav aria-label="Redes">
+      <a class="mono" href={contact.instagram}>instagram</a>
+      <a class="mono" href={contact.behance}>behance</a>
+      <span class="mono">© 2026</span>
+    </nav>
+  </div>
+</footer>
