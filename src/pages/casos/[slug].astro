@@ -1,0 +1,75 @@
+---
+import Base from '../../layouts/Base.astro';
+import Scene from '../../components/Scene.astro';
+import Nav from '../../components/Nav.astro';
+import Contact from '../../components/Contact.astro';
+import Footer from '../../components/Footer.astro';
+import { cases, textFor } from '../../data/content.js';
+
+export function getStaticPaths() {
+  return cases.map((c, i) => ({
+    params: { slug: c.slug },
+    props: { c, i, next: cases[(i + 1) % cases.length] },
+  }));
+}
+
+const { c, i, next } = Astro.props;
+const t = textFor(c.slug);
+const num = String(i + 1).padStart(2, '0');
+---
+<Base title={`${c.client} — minərvo.studio`} description={t.summary}>
+  <Nav />
+  <main class="case-page">
+    <section class="case-hero" data-mode="frame">
+      <div class="wrap">
+        <div class="case-head">
+          <a class="mono back" href="/#trabajo">← trabajo</a>
+          <span class="mono eyebrow">caso {num} · {c.type} · {c.year}</span>
+          <h1 style={`view-transition-name:title-${c.slug}`}>{c.client}</h1>
+          <p class="lead">{t.summary}</p>
+        </div>
+        <div class="case-media" data-anchor style={`background:var(--${c.bg});view-transition-name:shot-${c.slug}`}>
+          {c.video ? (
+            <video src={c.video} poster={c.poster} autoplay muted loop playsinline aria-label={`Video del proyecto ${c.client}`}></video>
+          ) : (
+            <>
+              {c.shot.map((b) => <b style={b.s}></b>)}
+              <span class="mono tag">[ video del caso · 16:9 · 15–30 s ]</span>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <section class="sec case-body" data-mode="chaos">
+      <div class="wrap">
+        <div class="case-grid">
+          <div class="case-block"><span class="mono eyebrow">reto</span><p>{t.challenge}</p></div>
+          <div class="case-block"><span class="mono eyebrow">idea</span><p>{t.solution}</p></div>
+          <div class="case-block"><span class="mono eyebrow">resultado</span><p>{t.result}</p></div>
+        </div>
+        <dl class="case-facts">
+          <div><dt class="mono">cliente</dt><dd>{c.client}</dd></div>
+          <div><dt class="mono">servicio</dt><dd>{c.type}</dd></div>
+          <div><dt class="mono">año</dt><dd>{c.year}</dd></div>
+          <div><dt class="mono">créditos</dt><dd>{t.credits.join(' · ')}</dd></div>
+          {c.url && <div><dt class="mono">en vivo</dt><dd><a href={c.url}>{c.url.replace(/^https?:\/\//, '')}</a></dd></div>}
+        </dl>
+      </div>
+    </section>
+
+    <section class="next" data-mode="chaos">
+      <div class="wrap">
+        <a class="next-link" href={`/casos/${next.slug}/`} style={`--next:var(--${next.bg})`}>
+          <span class="mono eyebrow">siguiente caso</span>
+          <strong>{next.client}</strong>
+          <span class="mono">{next.type} · {next.year} →</span>
+        </a>
+      </div>
+    </section>
+
+    <Contact />
+  </main>
+  <Footer />
+  <Scene />
+</Base>

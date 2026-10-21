@@ -9,12 +9,12 @@ import { cases } from '../data/content.js';
     </div>
     <div class="cases">
       {cases.map((c, i) => (
-        <a class="case" href="#trabajo">
-          <div class="shot" style={`background:var(--${c.bg})`}>
+        <a class="case" href={`/casos/${c.slug}/`}>
+          <div class="shot" style={`background:var(--${c.bg});view-transition-name:shot-${c.slug}`}>
             {c.shot.map((b) => <b style={b.s}></b>)}
             <span class="mono tag">[ video caso {String(i + 1).padStart(2, '0')} ]</span>
           </div>
-          <div class="meta"><strong>{c.client}</strong><span class="mono">{c.type} · {c.year}</span></div>
+          <div class="meta"><strong style={`view-transition-name:title-${c.slug}`}>{c.client}</strong><span class="mono">{c.type} · {c.year}</span></div>
         </a>
       ))}
     </div>

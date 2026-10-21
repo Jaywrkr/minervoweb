@@ -1,0 +1,18 @@
+---
+// Escena de formas compartida por todas las páginas: canvas, pads y arranque.
+// Si la página incluye <Loader />, el arranque lo usa.
+import Pads from './Pads.astro';
+---
+<canvas id="c" aria-hidden="true"></canvas>
+<Pads />
+
+<script>
+  import { initFormas } from '../scripts/formas.js';
+  initFormas({
+    canvas: document.getElementById('c') as HTMLCanvasElement,
+    soundButton: document.getElementById('sound'),
+    soundLabel: document.getElementById('soundTxt'),
+    pads: document.getElementById('pads'),
+    loader: document.getElementById('loader'),
+  });
+</script>

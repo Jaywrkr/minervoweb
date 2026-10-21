@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import Loader from '../components/Loader.astro';
+import Scene from '../components/Scene.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import Work from '../components/Work.astro';
@@ -8,12 +10,9 @@ import Manifesto from '../components/Manifesto.astro';
 import Studio from '../components/Studio.astro';
 import Contact from '../components/Contact.astro';
 import Footer from '../components/Footer.astro';
-import Pads from '../components/Pads.astro';
-import Loader from '../components/Loader.astro';
 ---
 <Base>
   <Loader />
-  <canvas id="c" aria-hidden="true"></canvas>
   <Nav />
   <main>
     <Hero />
@@ -24,16 +23,5 @@ import Loader from '../components/Loader.astro';
     <Contact />
   </main>
   <Footer />
-  <Pads />
+  <Scene />
 </Base>
-
-<script>
-  import { initFormas } from '../scripts/formas.js';
-  initFormas({
-    canvas: document.getElementById('c') as HTMLCanvasElement,
-    soundButton: document.getElementById('sound'),
-    soundLabel: document.getElementById('soundTxt'),
-    pads: document.getElementById('pads'),
-    loader: document.getElementById('loader'),
-  });
-</script>
