@@ -26,6 +26,8 @@ public/prototipos/       prototipos sueltos
 brand/                   sistema visual 2026: guía, tokens y plantillas de Instagram
 ```
 
+La navegación usa el router de Astro (`ClientRouter`): el escenario de formas, el menú y los pads persisten entre páginas (`transition:persist`), así las formas nunca se reinician. Lo que depende del contenido de cada página se conecta en `astro:page-load`.
+
 Cada `<section data-mode="…">` define qué hacen las formas mientras está al centro de la pantalla: `glyph` (arman la ə), `slots` (cada forma va a su servicio), `stripes` (grilla op-art) o `chaos` (caen con gravedad).
 
 ## Desarrollo

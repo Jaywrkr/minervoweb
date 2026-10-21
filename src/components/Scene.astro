@@ -1,16 +1,21 @@
 ---
 // Escena de formas compartida por todas las páginas: canvas, pads y arranque.
-// Si la página incluye <Loader />, el arranque lo usa.
+// Con el router de Astro, el escenario (canvas 2D + 3D) y los pads persisten entre páginas:
+// las formas no se reinician al navegar, solo cambian de formación.
+// Si la página incluye <Loader />, la primera carga lo usa.
 import Pads from './Pads.astro';
 ---
-<canvas id="c" aria-hidden="true"></canvas>
-<Pads />
+<div id="stage" transition:persist="escena">
+  <canvas id="c" aria-hidden="true"></canvas>
+</div>
+<div transition:persist="pads"><Pads /></div>
 
 <script>
   import { initFormas } from '../scripts/formas.js';
   import { initCursor, initReveal, initMagnetic, initSmoothScroll, initScrub, initInstruments, initPoster } from '../scripts/motion.js';
   import { supports3D } from '../scripts/support3d.js';
 
+  // Este script corre una sola vez: la escena vive durante toda la visita.
   const scene = initFormas({
     canvas: document.getElementById('c') as HTMLCanvasElement,
     soundButton: document.getElementById('sound'),
@@ -19,8 +24,8 @@ import Pads from './Pads.astro';
     loader: document.getElementById('loader'),
   });
 
-  // La escena arranca en 2D al instante. Si el equipo soporta 3D (WebGL y sin movimiento reducido),
-  // three.js se carga en paralelo y la escena pasa a 3D sin reiniciarse. ?escena=2d fuerza el 2D.
+  // Arranca en 2D al instante; si el equipo soporta 3D, three.js se carga en paralelo y la escena
+  // pasa a 3D sin reiniciarse. ?escena=2d fuerza el 2D.
   if (supports3D()) {
     import('../scripts/render3d.js')
       .then(({ createRender3D }) => {
@@ -29,11 +34,40 @@ import Pads from './Pads.astro';
       })
       .catch(() => {});
   }
-  initSmoothScroll();
-  initScrub();
+
+  const lenis = initSmoothScroll();
   initCursor(scene);
-  initReveal();
-  initMagnetic();
-  initInstruments(scene);
-  initPoster(scene);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Al ir a un caso, las formas llenan una "pantalla" 16:9 antes de cambiar de página;
+  // en la página del caso esa pantalla se abre y las formas pasan a enmarcar el video.
+  document.addEventListener('astro:before-preparation', (e: any) => {
+    if (reduce || !e.to?.pathname?.startsWith('/casos/')) return;
+    const load = e.loader;
+    e.loader = async () => {
+      document.documentElement.classList.add('is-navigating');
+      scene.toScreen();
+      await Promise.all([load(), new Promise((r) => setTimeout(r, 650))]);
+    };
+  });
+
+  // Cada página nueva: la escena relee las secciones y se vuelven a conectar las interacciones del contenido.
+  let first = true;
+  document.addEventListener('astro:after-swap', () => {
+    // la clase sobrevive al cambio de <html> solo un instante: las formas bajan detrás del contenido nuevo
+    document.documentElement.classList.add('is-navigating');
+    setTimeout(() => document.documentElement.classList.remove('is-navigating'), 500);
+  });
+  document.addEventListener('astro:page-load', () => {
+    if (!first) {
+      scene.rescan();
+      if (lenis) { lenis.resize(); lenis.scrollTo(window.scrollY, { immediate: true, force: true }); }
+    }
+    first = false;
+    initScrub();
+    initReveal();
+    initMagnetic();
+    initInstruments(scene);
+    initPoster(scene);
+  });
 </script>
