@@ -8,7 +8,7 @@ import Pads from './Pads.astro';
 
 <script>
   import { initFormas } from '../scripts/formas.js';
-  import { initCursor, initReveal, initMagnetic } from '../scripts/motion.js';
+  import { initCursor, initReveal, initMagnetic, initSmoothScroll, initScrub } from '../scripts/motion.js';
   const scene = initFormas({
     canvas: document.getElementById('c') as HTMLCanvasElement,
     soundButton: document.getElementById('sound'),
@@ -16,6 +16,8 @@ import Pads from './Pads.astro';
     pads: document.getElementById('pads'),
     loader: document.getElementById('loader'),
   });
+  initSmoothScroll();
+  initScrub();
   initCursor(scene);
   initReveal();
   initMagnetic();

@@ -263,3 +263,13 @@ html.menu-open .nav{background:var(--ground)}
 }
 /* un elemento con [hidden] no debe mostrarse aunque su clase le dé display */
 .menu[hidden]{display:none}
+
+/* scroll suave (Lenis) */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto !important}
+.lenis.lenis-stopped{overflow:hidden}
+
+/* manifiesto: palabras apagadas que se encienden con el scroll */
+.scrub .w{display:inline}
+.scrub .w > span{opacity:.14;transition:opacity .35s ease}
+.scrub .w > span.lit{opacity:1}
