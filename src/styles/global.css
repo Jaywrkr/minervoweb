@@ -282,3 +282,8 @@ html.lenis,html.lenis body{height:auto}
 .card.is-playing h3::after{content:"";display:inline-block;width:8px;height:8px;margin-left:10px;border-radius:999px;background:var(--menta);vertical-align:middle;animation:beat .28s ease-in-out infinite alternate}
 @keyframes beat{to{transform:scale(.4);opacity:.5}}
 @media (prefers-reduced-motion:reduce){.card.is-playing h3::after{animation:none}}
+
+/* póster en contacto */
+.poster-tools{display:flex;flex-direction:column;gap:12px;padding-top:8px}
+.poster-tools[hidden]{display:none}
+.poster-btns{display:flex;gap:8px;flex-wrap:wrap}

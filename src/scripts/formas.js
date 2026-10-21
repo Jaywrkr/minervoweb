@@ -35,7 +35,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   let W = 0, H = 0, DPR = 1, S = 36, walls = [];
   const shapes = [];
   const assign = new Map(); // body → { el, x, y }
-  let modeSec = null, modeType = 'chaos', building = false;
+  let modeSec = null, modeType = 'chaos', building = false, shuffleNext = false;
 
   function makeWalls() {
     walls.forEach((w) => Composite.remove(world, w));
@@ -116,7 +116,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   }
 
   // Asigna formas para dibujar la ə dentro de `el`. El punto siempre son círculos menta.
-  function formGlyph(el) {
+  function formGlyph(el, shuffle = false) {
     const r = el.getBoundingClientRect();
     const want = Number(el.dataset.want) || 46;
     const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(want, Math.max(shapes.length, want - 18)));
@@ -127,6 +127,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       .forEach((b, i) => setTarget(b, el, dot[i].x, dot[i].y, p));
     const rest = shapes.filter((b) => !assign.has(b)).sort(byX);
     const pts = glyph.slice().sort((a, b) => a.x - b.x);
+    if (shuffle) rest.sort(() => Math.random() - 0.5); // remezcla: cada pieza va a otro lugar
     rest.forEach((b, i) => { if (i < pts.length) setTarget(b, el, pts[i].x, pts[i].y, p); });
   }
 
@@ -154,7 +155,8 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     assign.clear();
 
     if (type === 'glyph') {
-      formGlyph(sec.querySelector('[data-anchor]'));
+      formGlyph(sec.querySelector('[data-anchor]'), shuffleNext);
+      shuffleNext = false;
     } else if (type === 'slots') {
       sec.querySelectorAll('[data-slot]').forEach((el) => {
         const k = kindOf(el.dataset.slot);
@@ -429,6 +431,48 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       return hit ? hit.parent.plugin.color : null;
     },
     get dragging() { return !!(mc && mc.body); },
+    // Remezcla la formación actual (solo la ə): las piezas cambian de lugar sonando al llegar.
+    remix() {
+      if (modeType !== 'glyph' || !modeSec) return false;
+      shuffleNext = true;
+      setMode(modeSec);
+      return true;
+    },
+    // Dibuja la formación dentro de `el` como póster 1080×1350 y devuelve el canvas.
+    poster(el, { title = 'experiencias que se mueven.', serial = '' } = {}) {
+      const Wp = 1080, Hp = 1350, pad = 96;
+      const c = document.createElement('canvas'); c.width = Wp; c.height = Hp;
+      const g = c.getContext('2d');
+      g.fillStyle = color('ground'); g.fillRect(0, 0, Wp, Hp);
+      const r = el.getBoundingClientRect();
+      const mine = shapes.filter((b) => assign.get(b)?.el === el);
+      if (mine.length) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        mine.forEach((b) => { x0 = Math.min(x0, b.bounds.min.x); y0 = Math.min(y0, b.bounds.min.y); x1 = Math.max(x1, b.bounds.max.x); y1 = Math.max(y1, b.bounds.max.y); });
+        const boxW = Wp - pad * 2, boxH = Hp - pad * 2 - 260;
+        const k = Math.min(boxW / (x1 - x0), boxH / (y1 - y0));
+        const ox = pad + (boxW - (x1 - x0) * k) / 2, oy = pad + 40 + (boxH - (y1 - y0) * k) / 2;
+        g.save(); g.translate(ox, oy); g.scale(k, k); g.translate(-x0, -y0);
+        mine.forEach((b) => {
+          const { kind, color: col } = b.plugin;
+          g.fillStyle = col; g.strokeStyle = col;
+          if (kind.id === 'circulo') { g.beginPath(); g.arc(b.position.x, b.position.y, b.circleRadius, 0, Math.PI * 2); g.fill(); }
+          else if (kind.id === 'dona') { g.beginPath(); g.lineWidth = b.circleRadius * 0.5; g.arc(b.position.x, b.position.y, b.circleRadius * 0.75, 0, Math.PI * 2); g.stroke(); }
+          else { const v = b.vertices; g.beginPath(); g.moveTo(v[0].x, v[0].y); for (let i = 1; i < v.length; i++) g.lineTo(v[i].x, v[i].y); g.closePath(); g.fill(); }
+        });
+        g.restore();
+      }
+      const ink = color('ink'), muted = color('muted');
+      g.fillStyle = ink; g.font = '600 64px Geist, Helvetica Neue, Arial, sans-serif'; g.textBaseline = 'alphabetic';
+      g.fillText(title, pad, Hp - pad - 70);
+      g.font = '500 30px Geist, Helvetica Neue, Arial, sans-serif';
+      const wm = 'minərvo', wmW = g.measureText(wm).width;
+      g.fillText(wm, pad, Hp - pad); g.fillStyle = color('menta'); g.fillText('.', pad + wmW, Hp - pad);
+      g.fillStyle = ink; g.fillText('studio', pad + wmW + g.measureText('.').width, Hp - pad);
+      g.fillStyle = muted; g.font = '500 22px "Geist Mono", ui-monospace, monospace'; g.textAlign = 'right';
+      g.fillText(serial, Wp - pad, Hp - pad);
+      return c;
+    },
     // Un golpe del instrumento `kindId`: una de sus formas salta y suena.
     pulse(kindId, i, note) {
       const list = shapes.filter((b) => b.plugin.kind.id === kindId && assign.has(b));
