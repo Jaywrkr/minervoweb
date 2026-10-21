@@ -1,0 +1,21 @@
+---
+import { services } from '../data/content.js';
+---
+<section id="servicios" class="sec" data-mode="slots">
+  <div class="wrap">
+    <div class="head">
+      <span class="mono eyebrow">servicios</span>
+      <h2>seis formas de mover una marca.</h2>
+    </div>
+    <div class="svc">
+      {services.map((s) => (
+        <div class="card">
+          <div class="slot" data-slot={s.slot}></div>
+          <span class="mono">{s.tag}</span>
+          <h3>{s.title}</h3>
+          <p>{s.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
