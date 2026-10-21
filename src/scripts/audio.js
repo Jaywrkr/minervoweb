@@ -33,6 +33,8 @@ export function createAudio({ onChange } = {}) {
   // El navegador solo permite sonido después de una interacción.
   function unlock() { if (unlocked) return; unlocked = true; set(true); }
   function toggle() { unlocked = true; set(!on); }
+  // elección explícita del visitante (botones del loader)
+  function choose(value) { unlocked = true; set(value); }
 
   function env(g, t, peak, dec) {
     g.gain.setValueAtTime(0.0001, t);
@@ -76,5 +78,5 @@ export function createAudio({ onChange } = {}) {
     }
   }
 
-  return { play, unlock, toggle, get on() { return on; } };
+  return { play, unlock, toggle, choose, get on() { return on; } };
 }
