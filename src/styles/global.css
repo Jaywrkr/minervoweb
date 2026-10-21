@@ -242,3 +242,5 @@ html.menu-open .nav{background:var(--ground)}
   #sound #soundTxt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   #sound .dot{width:10px;height:10px}
 }
+/* un elemento con [hidden] no debe mostrarse aunque su clase le dé display */
+.menu[hidden]{display:none}
