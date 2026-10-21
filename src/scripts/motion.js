@@ -176,3 +176,39 @@ export function initScrub() {
     update();
   });
 }
+
+/* ---------- servicios como instrumentos ---------- */
+// Cada servicio toca un patrón de 8 pasos con su forma. Con mouse suena mientras está en hover;
+// en táctil, un toque toca un compás.
+const PATTERNS = {
+  cuadrado:  [1, 0, 0, 0, 1, 0, 0, 1],            // caja
+  circulo:   [1, 0, 0, 1, 0, 0, 1, 0],            // bombo
+  dona:      [0, 2, 0, 3, 0, 4, 0, 5],            // tom, notas que suben
+  triangulo: [1, 1, 1, 1, 1, 1, 1, 1],            // hi-hat
+  pildora:   [1, 0, 3, 0, 0, 5, 0, 0],            // bajo
+  luna:      [1, 0, 3, 5, 0, 7, 5, 0],            // marimba
+};
+export function initInstruments(scene) {
+  if (!scene) return;
+  const STEP = 140; // ms por paso (~107 bpm en corcheas)
+  document.querySelectorAll('[data-instrument]').forEach((card) => {
+    const kind = card.dataset.instrument, pat = PATTERNS[kind];
+    if (!pat) return;
+    let timer = null, step = 0;
+    const hit = () => {
+      const v = pat[step % pat.length];
+      if (v) scene.pulse(kind, step, v - 1);
+      step++;
+    };
+    const start = () => { if (timer) return; step = 0; hit(); timer = setInterval(hit, STEP); card.classList.add('is-playing'); };
+    const stop = () => { clearInterval(timer); timer = null; card.classList.remove('is-playing'); };
+    if (fine()) {
+      card.addEventListener('pointerenter', start);
+      card.addEventListener('pointerleave', stop);
+    } else {
+      card.addEventListener('click', () => { start(); setTimeout(stop, STEP * pat.length); });
+    }
+    card.addEventListener('focusin', start);
+    card.addEventListener('focusout', stop);
+  });
+}

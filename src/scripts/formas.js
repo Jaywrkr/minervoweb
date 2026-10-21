@@ -429,5 +429,16 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       return hit ? hit.parent.plugin.color : null;
     },
     get dragging() { return !!(mc && mc.body); },
+    // Un golpe del instrumento `kindId`: una de sus formas salta y suena.
+    pulse(kindId, i, note) {
+      const list = shapes.filter((b) => b.plugin.kind.id === kindId && assign.has(b));
+      if (list.length) {
+        const b = list[i % list.length];
+        b.plugin.flash = 1;
+        Body.setVelocity(b, { x: b.velocity.x, y: -7 });
+        Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.4);
+      }
+      audio.play(kindId, note ?? 0, 0.75);
+    },
   };
 }
