@@ -118,7 +118,8 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   // Asigna formas para dibujar la ə dentro de `el`. El punto siempre son círculos menta.
   function formGlyph(el) {
     const r = el.getBoundingClientRect();
-    const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(64, Math.max(shapes.length, 46)));
+    const want = Number(el.dataset.want) || 46;
+    const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(want, Math.max(shapes.length, want - 18)));
     const circles = shapes.filter((b) => b.plugin.kind.id === 'circulo');
     while (circles.length < dot.length) circles.push(spawn(KINDS[0]));
     while (shapes.length < glyph.length + dot.length) spawn(KINDS[1 + Math.floor(Math.random() * 5)]);
@@ -127,6 +128,23 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     const rest = shapes.filter((b) => !assign.has(b)).sort(byX);
     const pts = glyph.slice().sort((a, b) => a.x - b.x);
     rest.forEach((b, i) => { if (i < pts.length) setTarget(b, el, pts[i].x, pts[i].y, p); });
+  }
+
+  // Suelta las piezas de la formación actual en orden (de arriba hacia abajo), cada una con su golpe.
+  function releaseInOrder(duration = 700) {
+    const list = [...assign.keys()].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x);
+    modeType = 'chaos';
+    modeSec = null;
+    const step = duration / Math.max(1, list.length);
+    list.forEach((b, i) => setTimeout(() => {
+      assign.delete(b);
+      b.plugin.goal = 1;
+      b.collisionFilter.mask = ALL;
+      b.plugin.flash = 1;
+      Body.setVelocity(b, { x: (Math.random() - 0.5) * 6, y: -3 - Math.random() * 5 });
+      Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.3);
+      if (i % 3 === 0) audio.play(b.plugin.kind.id, b.plugin.note, 0.45);
+    }, i * step));
   }
 
   function setMode(sec, quiet = false) {
@@ -203,7 +221,11 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       if (mc && mc.body && mc.body.parent === b) continue;
       let r = rects.get(a.el);
       if (!r) { r = a.el.getBoundingClientRect(); rects.set(a.el, r); }
-      const dx = r.left + a.x - b.position.x, dy = r.top + a.y - b.position.y;
+      let tx = r.left + a.x, ty = r.top + a.y;
+      // las piezas en formación se apartan del mouse y vuelven: la marca se siente viva
+      const mx = tx - pointer.x, my = ty - pointer.y, md = Math.hypot(mx, my), R = S * 3.2;
+      if (md < R && md > 0.01) { const push = (R - md) * 0.55; tx += (mx / md) * push; ty += (my / md) * push; }
+      const dx = tx - b.position.x, dy = ty - b.position.y;
       b.force.y -= b.mass * g.y * g.scale; // anula la gravedad mientras están en formación
       Body.setVelocity(b, { x: b.velocity.x * 0.84 + dx * 0.02, y: b.velocity.y * 0.84 + dy * 0.02 });
       let ang = b.angle % (Math.PI * 2);
@@ -219,6 +241,11 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   });
 
   /* ---------- puntero ---------- */
+  const pointer = { x: -9999, y: -9999 };
+  if (fine && !reduce) {
+    window.addEventListener('pointermove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+    document.addEventListener('pointerleave', () => { pointer.x = pointer.y = -9999; });
+  }
   let mc = null;
   if (fine) {
     const mouse = Mouse.create(canvas);
@@ -365,7 +392,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       modeType = 'glyph';
       setTimeout(() => {
         loader.classList.add('is-done');
-        setMode(null); // se rompe: estallido y gravedad
+        releaseInOrder(); // se desarma pieza por pieza, de arriba hacia abajo, como un redoble
         window.dispatchEvent(new CustomEvent('mnv:intro'));
         try { sessionStorage.setItem('mnv-intro', '1'); } catch (e) {}
         setTimeout(() => {
