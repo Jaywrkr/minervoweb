@@ -3,6 +3,8 @@
 // y recomponen las formas. "Vestir" cambia la identidad completa. El estado vive en la URL (#e-r-c-k-marca)
 // y su número de edición sale del propio estado: la misma combinación siempre es la misma edición.
 
+import { VOICES } from './voces.js';
+
 const DIALS = [
   { id: 'e', name: 'escala' },
   { id: 'r', name: 'ritmo' },
@@ -29,7 +31,7 @@ const BRANDS = {
     p: ['#01095c', '#2d43e7', '#161f7e', '#3c4cd7', '#2433a8', '#00043e'],
     font: '"IBM Plex Sans",system-ui,sans-serif', hfont: '"IBM Plex Sans",system-ui,sans-serif', case: 'none', radius: 0,
     shapes: ['cuadrado', 'circulo'],
-    rules: { wmax: 600, angles: true, density: 1, border: 30, mono: false },
+    rules: { wmax: 600, angles: false, density: 1, border: 30, mono: false, snap: 50, links: true },
   },
   // Jay Jaramillo: negro puro, Geist Mono, nada de pesos gruesos, sin ángulos que no sean rectos, espacio vacío
   jay: {
@@ -86,12 +88,31 @@ export function initDiales(root) {
 
   /* ---------- titular: cada letra con su propio azar ---------- */
   const h1 = root.querySelector('#h1');
-  const words = h1.textContent.split(' ');
-  const R = rng(7);
-  h1.innerHTML = words
-    .map((w, wi) => (wi === 1 ? '<span class="w hlw" style="--cc:var(--p1)" data-cc="p1" data-solid>' : '<span class="w">') + [...w].map((ch) =>
-      `<span class="ch" aria-hidden="true" style="--rx:${(R() * 2 - 1).toFixed(3)};--ry:${(R() * 2 - 1).toFixed(3)};--rr:${(R() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
-    .join(' ');
+  function buildH1(text, hl) {
+    const Rh = rng(7);
+    h1.setAttribute('aria-label', text);
+    h1.innerHTML = text.split(' ')
+      .map((w, wi) => (wi === hl ? '<span class="w hlw" style="--cc:var(--p1)" data-cc="p1" data-solid>' : '<span class="w">') + [...w].map((ch) =>
+        `<span class="ch" aria-hidden="true" style="--rx:${(Rh() * 2 - 1).toFixed(3)};--ry:${(Rh() * 2 - 1).toFixed(3)};--rr:${(Rh() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
+      .join(' ');
+  }
+  const R = rng(11);
+
+  /* ---------- voz: el texto de toda la página según la marca ---------- */
+  const track = root.querySelector('#track');
+  let copyBrand = '';
+  function setCopy(brand) {
+    if (brand === copyBrand) return;
+    copyBrand = brand;
+    const V = VOICES[brand] || VOICES.minervo;
+    root.querySelectorAll('[data-t]').forEach((el) => {
+      const v = el.dataset.t.split('.').reduce((o, k) => (o == null ? o : o[k]), V);
+      el.textContent = v ?? '';
+    });
+    buildH1(V.h1, V.hl);
+    const items = V.ticker.map((t) => `<span>${t}<i>${V.sep}</i></span>`).join('');
+    track.innerHTML = items + items;
+  }
 
   // tarjetas y filas: también con su azar
   root.querySelectorAll('.dl-services .dl-card,.dl-case,.dl-art').forEach((el) => {
@@ -112,7 +133,7 @@ export function initDiales(root) {
     const key = kinds.join();
     if (key === compKinds) return;
     compKinds = key;
-    comp.innerHTML = seeds.map((sd, i) => `<g data-i="${i}">${shapeSVG(kinds[Math.floor(sd.pick * kinds.length)])}</g>`).join('');
+    comp.innerHTML = seeds.map((sd, i) => `<g data-i="${i}">${shapeSVG(kinds[Math.floor(sd.pick * kinds.length)])}</g>`).join('') + '<g class="ov"></g>';
   }
 
   function layoutShapes() {
@@ -126,12 +147,15 @@ export function initDiales(root) {
     const cw = W / cols, ch = H / rows;
     const base = Math.min(cw, ch) / 40 * lerp(0.45, 1.15, e);
     const pal = BRANDS[state.b].p;
-    comp.querySelectorAll('g').forEach((g, i) => {
+    const pts = [];
+    comp.querySelectorAll('g[data-i]').forEach((g, i) => {
       const sd = seeds[i];
       if (i >= n) { g.style.opacity = '0'; g.style.transform = `translate(${W / 2}px,${H / 2}px) scale(0)`; return; }
       const cell = Math.floor(i * step);
       const gx = (cell % cols + 0.5) * cw, gy = (Math.floor(cell / cols) + 0.5) * ch;
-      const x = lerp(gx, sd.x * W, k), y = lerp(gy, sd.y * H, k);
+      let x = lerp(gx, sd.x * W, k), y = lerp(gy, sd.y * H, k);
+      if (rules.snap) { x = Math.round(x / rules.snap) * rules.snap; y = Math.round(y / rules.snap) * rules.snap; }
+      pts.push([x, y]);
       // rotación: a 0 el sistema es ortogonal (múltiplos de 90°), con caos se suelta
       const ortho = Math.round(sd.rot / 90) * 90;
       const rot = rules.angles ? lerp(ortho, sd.rot, k) : ortho;
@@ -146,6 +170,18 @@ export function initDiales(root) {
         s.style.opacity = op.toFixed(2);
       });
     });
+    // capa técnica (Coresolutions): enlaces entre nodos y etiquetas de datos en mono
+    const ov = comp.querySelector('.ov');
+    const labels = (VOICES[state.b] || {}).art || [];
+    if (!rules.links || !pts.length) { if (ov) ov.innerHTML = ''; return; }
+    let d = '';
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+      if (Math.hypot(ax - bx, ay - by) < 420) d += `M${ax.toFixed(0)} ${ay.toFixed(0)}L${bx.toFixed(0)} ${ay.toFixed(0)}L${bx.toFixed(0)} ${by.toFixed(0)}`;
+    }
+    const step2 = Math.max(1, Math.floor(pts.length / labels.length));
+    ov.innerHTML = `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" opacity=".45"/>` +
+      labels.map((t, j) => { const q = pts[Math.min(pts.length - 1, j * step2)]; return `<text x="${(q[0] + 26).toFixed(0)}" y="${(q[1] - 26).toFixed(0)}" font-family="Geist Mono, monospace" font-size="22" fill="currentColor">${t}</text>`; }).join('');
   }
 
   /* ---------- diales ---------- */
@@ -224,6 +260,7 @@ export function initDiales(root) {
     s.setProperty('--wmax', String(B.rules.wmax));
     s.setProperty('--rot', B.rules.angles ? '1' : '0');
     s.setProperty('--bdmin', B.rules.border + '%');
+    setCopy(state.b);
     // cada bloque elige su tinta según su fondo real
     root.querySelectorAll('[data-cc]').forEach((el) => {
       const key = el.dataset.cc, solid = el.hasAttribute('data-solid');

@@ -3,31 +3,18 @@
 // tarjetas redondeadas, display grueso). Cuatro diales rediseñan la página en vivo; "vestir" la pone con
 // la identidad de otra marca. Cada combinación es una edición numerada que se comparte por URL.
 import Base from '../../layouts/Base.astro';
-const nav = [
-  { n: '01', label: 'trabajo', cc: 'p5' },
-  { n: '02', label: 'servicios', cc: 'p1' },
-  { n: '03', label: 'estudio', cc: 'p2' },
-  { n: '04', label: 'contacto', cc: 'p0' },
-];
-const services = [
-  { t: 'Identidad viva', d: 'Marcas que se comportan, no solo se ven.', l: ['Estrategia y nombre', 'Sistema visual', 'Guías que se usan'], cc: 'p0' },
-  { t: 'Web y producto', d: 'Diseño y código en el mismo equipo.', l: ['Sitios a medida', 'Producto digital', 'WebGL y 3D'], cc: 'p1' },
-  { t: 'Motion', d: 'Sistemas que se mueven con intención.', l: ['Animación de marca', 'Video y redes', 'Interfaces vivas'], cc: 'p4' },
-  { t: 'Experiencias', d: 'Instalaciones, eventos y lo que aún no tiene nombre.', l: ['Activaciones', 'Instalaciones', 'Lanzamientos'], cc: 'p2' },
-];
-const work = [
-  { y: '2026', t: 'Caso uno', k: 'identidad · web', cc: 'p5' },
-  { y: '2025', t: 'Caso dos', k: 'motion · producto', cc: 'p3' },
-  { y: '2025', t: 'Caso tres', k: 'experiencia', cc: 'p4' },
-];
-const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'código a medida', 'sistemas de marca'];
+import { VOICES } from '../../scripts/voces.js';
+const V = VOICES.minervo;
+const navCC = ['p5', 'p1', 'p2', 'p0'];
+const svcCC = ['p0', 'p1', 'p4', 'p2'];
+const workCC = ['p5', 'p3', 'p4'];
 ---
 <Base title="minərvo — diales (laboratorio)" description="Prototipo: la web es el sistema." noindex>
   <div class="dl" id="dl" data-brand="minervo">
     <header class="dl-nav">
       <a class="dl-wm" href="#"><span id="wm">minərvo</span><i>.</i><span class="dl-wear" id="wear"></span></a>
       <nav class="dl-tiles" aria-label="Principal">
-        {nav.map((x) => <a class="dl-tile" href="#" style={`--cc:var(--${x.cc})`} data-cc={x.cc}><span>{x.n}</span><b>{x.label}</b><span aria-hidden="true">↗</span></a>)}
+        {V.nav.map((label, i) => <a class="dl-tile" href="#" style={`--cc:var(--${navCC[i]})`} data-cc={navCC[i]}><span data-t={`nums.${i}`}>{V.nums[i]}</span><b data-t={`nav.${i}`}>{label}</b><span aria-hidden="true">↗</span></a>)}
       </nav>
       <span class="dl-pill dl-ed" id="edTop">edición nº —</span>
     </header>
@@ -35,35 +22,36 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     <main id="contenido" class="dl-page">
       <section class="dl-bento">
         <div class="dl-card dl-hero" style="--cc:var(--paper)" data-cc="paper">
-          <span class="dl-pill">estudio de sistemas de marca · cuenca</span>
-          <h1 class="dl-h1" id="h1" aria-label="Diseñamos sistemas, no páginas.">Diseñamos sistemas, no páginas.</h1>
-          <p class="dl-lead">Identidad, web, motion y experiencias que funcionan como un solo sistema. Gira los diales: esta página también es uno.</p>
+          <span class="dl-pill" data-t="kicker">{V.kicker}</span>
+          <h1 class="dl-h1" id="h1" aria-label={V.h1}>{V.h1}</h1>
+          <p class="dl-lead" data-t="lead">{V.lead}</p>
+          <a class="dl-cta" href="#" data-t="cta">{V.cta}</a>
         </div>
         <div class="dl-card dl-art" style="--cc:var(--p5)" data-cc="p5">
           <svg class="dl-comp" id="comp" viewBox="0 0 1000 1000" aria-hidden="true"></svg>
         </div>
       </section>
 
-      <div class="dl-ticker" aria-hidden="true" style="--cc:var(--p4)" data-cc="p4"><div class="dl-track">
-        {[0, 1].map(() => ticker.map((t) => <span>{t}<i>✦</i></span>))}
+      <div class="dl-ticker" aria-hidden="true" style="--cc:var(--p4)" data-cc="p4"><div class="dl-track" id="track">
+        {[0, 1].map(() => V.ticker.map((t) => <span>{t}<i>{V.sep}</i></span>))}
       </div></div>
 
       <section class="dl-services" aria-label="Servicios">
-        {services.map((s, i) => (
-          <article class="dl-card" style={`--cc:var(--${s.cc})`} data-cc={s.cc}>
-            <span class="dl-pill">0{i + 1}</span>
-            <h2>{s.t}</h2>
-            <p>{s.d}</p>
-            <ul>{s.l.map((x) => <li>{x}</li>)}</ul>
+        {V.services.map((s, i) => (
+          <article class="dl-card" style={`--cc:var(--${svcCC[i]})`} data-cc={svcCC[i]}>
+            <span class="dl-pill" data-t={`nums.${i}`}>{V.nums[i]}</span>
+            <h2 data-t={`services.${i}.t`}>{s.t}</h2>
+            <p data-t={`services.${i}.d`}>{s.d}</p>
+            <ul>{s.l.map((x, j) => <li data-t={`services.${i}.l.${j}`}>{x}</li>)}</ul>
           </article>
         ))}
       </section>
 
       <section class="dl-work" aria-label="Trabajo">
-        {work.map((w) => (
-          <a class="dl-card dl-case" href="#" style={`--cc:var(--${w.cc})`} data-cc={w.cc}>
+        {V.work.map((w, i) => (
+          <a class="dl-card dl-case" href="#" style={`--cc:var(--${workCC[i]})`} data-cc={workCC[i]}>
             <span class="dl-thumb" aria-hidden="true"></span>
-            <span class="dl-meta"><b>{w.t}</b><span>{w.y} · {w.k}</span></span>
+            <span class="dl-meta"><b data-t={`work.${i}.t`}>{w.t}</b><span data-t={`work.${i}.m`}>{w.m}</span></span>
           </a>
         ))}
       </section>
@@ -114,6 +102,7 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     --e:.5; --r:.5; --c:.6; --k:0;
     --s:calc(.75 + var(--e) * .7);
     --wmax:800; --rot:1; --bdmin:0%;
+    --ease:cubic-bezier(.34,1.56,.64,1); --dur:.6s;
     --w:min(calc(420 + var(--c) * 380),var(--wmax));
     --gap:calc((6px + (1 - var(--r)) * 22px) * var(--s));
     --radius-card:32;
@@ -135,13 +124,13 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     border:1.5px solid color-mix(in oklab,var(--t) max(calc((1 - var(--c)) * 70%),var(--bdmin)),transparent);
     padding:calc(22px * var(--s));
     transform:rotate(calc(var(--rr,0) * var(--k) * var(--rot) * 6deg)) translateY(calc(var(--ry,0) * var(--k) * 24px));
-    transition:transform .6s cubic-bezier(.2,.8,.2,1),border-radius .5s,padding .5s;
+    transition:transform var(--dur) var(--ease),border-radius .5s,padding .5s,box-shadow .2s;
   }
   .dl-pill{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border:1.5px solid currentColor;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
 
   /* nav: bloques de color */
   .dl-nav{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:12px;padding:12px 0;background:linear-gradient(var(--g) 70%,transparent)}
-  .dl-wm{font-family:var(--hfont);font-weight:800;font-size:clamp(28px,3.2vw,44px);letter-spacing:-.04em;line-height:1;text-transform:var(--case);margin-right:auto}
+  .dl-wm{font-family:var(--hfont);font-weight:min(800,var(--wmax));font-size:clamp(28px,3.2vw,44px);letter-spacing:-.04em;line-height:1;text-transform:var(--case);margin-right:auto}
   .dl-wm i{font-style:normal;color:var(--p1)}
   .dl-wear{font-size:.45em;letter-spacing:0;font-weight:500;margin-left:.4em;opacity:.7}
   .dl-tiles{display:flex;gap:6px}
@@ -164,11 +153,11 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
   }
   .dl-h1 .w{display:inline-block;white-space:nowrap}
   .dl-h1 .hlw{background:var(--cc);color:var(--ci);border-radius:.25em;padding:0 .12em;margin:0 -.04em}
-  .dl-h1 .ch{display:inline-block;transform:translate(calc(var(--rx) * var(--k) * .1em),calc(var(--ry) * var(--k) * .18em)) rotate(calc(var(--rr) * var(--k) * var(--rot) * 16deg));transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+  .dl-h1 .ch{display:inline-block;transform:translate(calc(var(--rx) * var(--k) * .1em),calc(var(--ry) * var(--k) * .18em)) rotate(calc(var(--rr) * var(--k) * var(--rot) * 16deg));transition:transform var(--dur) var(--ease)}
   .dl-lead{font-size:calc(17px * min(var(--s),1.2));line-height:1.45;max-width:40ch;margin:0}
   .dl-art{padding:0;overflow:hidden;display:grid;place-items:center}
   .dl-comp{width:100%;height:100%;max-height:min(78vh,720px);display:block}
-  .dl-comp g{transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .4s;transform-box:view-box}
+  .dl-comp g{transition:transform var(--dur) var(--ease),opacity .4s;transform-box:view-box}
   .dl-comp .sh{transition:fill .7s,stroke .7s}
   @media (max-width:760px){.dl-bento{grid-template-columns:1fr}.dl-hero{min-height:0}.dl-art{aspect-ratio:1}}
 
@@ -225,6 +214,62 @@ const ticker = ['identidad viva', 'web y producto', 'motion', 'experiencias', 'c
     .dl-brands{justify-content:center}
     .dl-ed{display:none}
   }
+
+  /* llamada a la acción y piezas comunes */
+  .dl-cta{display:inline-flex;align-items:center;min-height:52px;padding:0 24px;border-radius:999px;background:var(--t);color:var(--g)!important;font-weight:600;font-size:16px;transition:transform var(--dur) var(--ease),background .2s}
+  .dl-cta:hover{transform:translateY(-3px) rotate(calc(-3deg * var(--rot)))}
+  .dl li:empty{display:none}
+  .dl-art{color:var(--ci)}
+
+  /* ===== Coresolutions: retícula de línea fina, esquinas a 0, datos en mono, movimiento preciso ===== */
+  [data-brand=coresolutions]{--ease:cubic-bezier(.2,0,0,1);--dur:.32s}
+  [data-brand=coresolutions] .dl-bento,[data-brand=coresolutions] .dl-services,[data-brand=coresolutions] .dl-work{gap:0}
+  [data-brand=coresolutions] .dl-card{border:1px solid #c8ccd5;margin:0 -1px -1px 0}
+  [data-brand=coresolutions] .dl-hero{background-image:linear-gradient(#e2e5ec 1px,transparent 1px),linear-gradient(90deg,#e2e5ec 1px,transparent 1px);background-size:48px 48px;background-position:-1px -1px}
+  [data-brand=coresolutions] .dl-art{background-image:linear-gradient(#161f7e 1px,transparent 1px),linear-gradient(90deg,#161f7e 1px,transparent 1px);background-size:5% 5%}
+  [data-brand=coresolutions] .dl-pill{border-radius:2px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;font-size:12px;min-height:26px;padding:0 10px;border-width:1px}
+  [data-brand=coresolutions] .dl-h1{letter-spacing:-.02em;line-height:1.05;max-width:13ch}
+  [data-brand=coresolutions] .dl-h1 .hlw{border-radius:0}
+  [data-brand=coresolutions] .dl-lead{font-size:17px;max-width:46ch}
+  [data-brand=coresolutions] .dl-cta{border-radius:0;background:#01095c;color:#fff!important;font-weight:600;min-height:48px}
+  [data-brand=coresolutions] .dl-cta:hover{background:#0c1071;transform:none;box-shadow:0 4px 12px rgba(1,9,92,.16)}
+  [data-brand=coresolutions] .dl-ticker{border-radius:0;margin:0 0 -1px;border:1px solid #c8ccd5}
+  [data-brand=coresolutions] .dl-track span{font-family:var(--mono);font-size:14px;text-transform:uppercase;letter-spacing:.06em;font-weight:500;padding:12px 0 12px 22px}
+  [data-brand=coresolutions] .dl-tile{border-radius:0;height:56px}
+  [data-brand=coresolutions] .dl-tile span:first-child{font-family:var(--mono);font-size:11px}
+  [data-brand=coresolutions] .dl-services li{font-family:var(--mono);font-size:13px;border-bottom-width:1px}
+  [data-brand=coresolutions] .dl-services li::before{content:"→ "}
+  [data-brand=coresolutions] .dl-meta span{font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+  [data-brand=coresolutions] .dl-thumb{border-radius:0;background-image:linear-gradient(color-mix(in oklab,var(--ci) 18%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in oklab,var(--ci) 18%,transparent) 1px,transparent 1px);background-size:24px 24px}
+  [data-brand=coresolutions] .dl-case:hover{box-shadow:0 4px 12px rgba(1,9,92,.16);position:relative;z-index:1}
+  [data-brand=coresolutions] .dl-wm{letter-spacing:-.02em}
+
+  /* ===== Jay Jaramillo: negro, mono, texto chico, mucho vacío, sin adornos, movimiento lento ===== */
+  [data-brand=jay]{--ease:cubic-bezier(.4,0,.2,1);--dur:.9s}
+  [data-brand=jay] .dl-hero{justify-content:center;gap:28px}
+  [data-brand=jay] .dl-h1{font-size:min(calc(clamp(44px,7.4vw,124px) * var(--s)),56px);letter-spacing:0;line-height:1.25;max-width:16ch;margin:0}
+  [data-brand=jay] .dl-h1 .hlw{border-radius:0;padding:0 .15em;margin:0}
+  [data-brand=jay] .dl-lead{font-size:14px;max-width:34ch;color:#8a8a8a}
+  [data-brand=jay] .dl-pill{border:0;padding:0;min-height:0;font-size:12px;color:#8a8a8a}
+  [data-brand=jay] .dl-cta{background:none;color:#fff!important;padding:0 0 2px;min-height:0;border-bottom:1px solid #fff;border-radius:0;font-weight:500;font-size:14px}
+  [data-brand=jay] .dl-cta:hover{transform:none;opacity:.6}
+  [data-brand=jay] .dl-tile{background:none!important;color:#fff!important;height:auto;width:auto;padding:4px 8px;display:inline-flex;gap:8px;align-items:baseline}
+  [data-brand=jay] .dl-tile b{font-weight:500;font-size:13px}
+  [data-brand=jay] .dl-tile span:first-child{color:#8a8a8a;font-size:12px}
+  [data-brand=jay] .dl-tile span:last-child{display:none}
+  [data-brand=jay] .dl-ticker{border:0;border-top:1px solid #262626;border-bottom:1px solid #262626;border-radius:0;background:none!important}
+  [data-brand=jay] .dl-track{animation-duration:90s}
+  [data-brand=jay] .dl-track span{font-size:13px;font-weight:500;padding:14px 0 14px 28px;color:#8a8a8a}
+  [data-brand=jay] .dl-track i{margin-left:28px}
+  [data-brand=jay] .dl-services .dl-card{min-height:calc(200px * var(--s))}
+  [data-brand=jay] .dl-services h2{font-size:min(calc(30px * var(--s)),24px);letter-spacing:0}
+  [data-brand=jay] .dl-services p{font-weight:400;font-size:14px;opacity:.6}
+  [data-brand=jay] .dl-services li{border:0;padding:2px 0;font-size:13px}
+  [data-brand=jay] .dl-services li::before{content:"— "}
+  [data-brand=jay] .dl-meta b{font-size:18px;letter-spacing:0}
+  [data-brand=jay] .dl-meta span{font-size:12px}
+  [data-brand=jay] .dl-thumb{border-radius:0;background:none;border-color:#262626}
+  [data-brand=jay] .dl-wm{font-size:22px;letter-spacing:0}
   ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
   ::view-transition-new(root){animation:dl-wipe .8s cubic-bezier(.7,0,.2,1)}
   @keyframes dl-wipe{from{clip-path:circle(0 at var(--vx,50%) var(--vy,100%))}to{clip-path:circle(150% at var(--vx,50%) var(--vy,100%))}}
