@@ -12,28 +12,29 @@ const DIALS = [
 
 // Marcas. nórdika y pulpa son ficticias, de laboratorio, hasta tener casos reales con permiso.
 const BRANDS = {
+  // minərvo fresco: crema, bloques de color y display grueso
   minervo: {
-    name: 'minərvo', g: '#0b0b0d', t: '#f3f0e8',
-    p: ['#8edcb2', '#ec5b2c', '#f2b83b', '#2e7d46', '#f29bc0', '#6b54b0'],
-    font: 'var(--display)', hfont: 'var(--display)', case: 'none', radius: 18, darkCards: true,
+    name: 'minərvo', g: '#f4ebe1', t: '#0b0b0d', ci: '#0b0b0d', paper: '#fffaf3',
+    p: ['#5fe3a1', '#ff5b2e', '#ffb800', '#1fbf5f', '#ff9ec7', '#9b7bff'],
+    font: '"Geist",system-ui,sans-serif', hfont: '"Bricolage","Geist",sans-serif', case: 'none', radius: 32,
     shapes: ['circulo', 'dona', 'luna', 'triangulo', 'pildora', 'cuadrado'],
   },
   nordika: {
-    name: 'nórdika', g: '#e8ebe6', t: '#14213d',
-    p: ['#2f5d8a', '#e07a5f', '#5b7f6e', '#3d405b', '#c9a227', '#14213d'],
-    font: 'Georgia,"Times New Roman",serif', hfont: 'Georgia,"Times New Roman",serif', case: 'none', radius: 0, darkCards: true,
+    name: 'nórdika', g: '#e6e9e4', t: '#14213d', ci: '#f4f1ea', paper: '#f7f6f1',
+    p: ['#2f5d8a', '#c2593f', '#4f7564', '#3d405b', '#a2821c', '#14213d'],
+    font: 'Georgia,"Times New Roman",serif', hfont: 'Georgia,"Times New Roman",serif', case: 'none', radius: 0,
     shapes: ['circulo', 'cuadrado', 'triangulo'],
   },
   pulpa: {
-    name: 'pulpa', g: '#ff5a36', t: '#1d0b2e',
-    p: ['#ffd23f', '#3bceac', '#fff3e0', '#540d6e', '#1d0b2e', '#ee4266'],
-    font: 'var(--display)', hfont: 'var(--poster)', case: 'uppercase', radius: 40, darkCards: false,
+    name: 'pulpa', g: '#ff5a36', t: '#1d0b2e', ci: '#1d0b2e', paper: '#fff3e0',
+    p: ['#ffd23f', '#3bceac', '#fff3e0', '#c9b6ff', '#ffb3c7', '#ffd23f'],
+    font: '"Geist",system-ui,sans-serif', hfont: 'var(--poster)', case: 'uppercase', radius: 48,
     shapes: ['circulo', 'dona', 'pildora', 'luna'],
   },
 };
 
 const MAX = 64; // formas en la composición
-const W = 1000, H = 560;
+const W = 1000, H = 1000;
 
 // aleatorio con semilla (las posiciones "caóticas" son siempre las mismas para cada forma)
 function rng(seed) {
@@ -58,7 +59,7 @@ function shapeSVG(kind) {
 export function initDiales(root) {
   if (!root) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const state = { e: 0.5, r: 0.5, c: 0.6, k: 0, b: 'minervo' };
+  const state = { e: 0.5, r: 0.5, c: 0.85, k: 0, b: 'minervo' };
   readHash();
 
   /* ---------- titular: cada letra con su propio azar ---------- */
@@ -66,12 +67,12 @@ export function initDiales(root) {
   const words = h1.textContent.split(' ');
   const R = rng(7);
   h1.innerHTML = words
-    .map((w, wi) => '<span style="display:inline-block;white-space:nowrap">' + [...w].map((ch) =>
-      `<span class="ch${wi === 1 ? ' hl' : ''}" aria-hidden="true" style="--rx:${(R() * 2 - 1).toFixed(3)};--ry:${(R() * 2 - 1).toFixed(3)};--rr:${(R() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
+    .map((w, wi) => `<span class="w${wi === 1 ? ' hlw' : ''}">` + [...w].map((ch) =>
+      `<span class="ch" aria-hidden="true" style="--rx:${(R() * 2 - 1).toFixed(3)};--ry:${(R() * 2 - 1).toFixed(3)};--rr:${(R() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
     .join(' ');
 
   // tarjetas y filas: también con su azar
-  root.querySelectorAll('.dl-card,.dl-row').forEach((el) => {
+  root.querySelectorAll('.dl-services .dl-card,.dl-case,.dl-art').forEach((el) => {
     el.style.setProperty('--rx', (R() * 2 - 1).toFixed(3));
     el.style.setProperty('--ry', (R() * 2 - 1).toFixed(3));
     el.style.setProperty('--rr', (R() * 2 - 1).toFixed(3));
@@ -94,7 +95,7 @@ export function initDiales(root) {
 
   function layoutShapes() {
     const { e, r, c, k } = state;
-    const cols = Math.round(lerp(4, 16, r));
+    const cols = Math.round(lerp(3, 9, r));
     const rows = Math.max(2, Math.round(cols * (H / W)));
     const n = Math.min(MAX, cols * rows);
     const cw = W / cols, ch = H / rows;
@@ -112,7 +113,7 @@ export function initDiales(root) {
       g.style.opacity = '1';
       g.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sc.toFixed(3)})`;
       // contraste bajo: todo en un solo tono; alto: paleta completa
-      const col = c < 0.25 ? 'var(--t)' : `var(--p${(i + Math.floor(sd.pick * 6)) % pal.length})`;
+      const col = c < 0.25 ? 'var(--t)' : (i % 7 === 3 ? "var(--paper)" : `var(--p${(i + Math.floor(sd.pick * 5)) % 5})`);
       const op = lerp(0.25, 1, clamp01(c * 1.4));
       g.querySelectorAll('.sh').forEach((s) => {
         if (s.classList.contains('s')) s.style.stroke = col; else s.style.fill = col;
@@ -193,7 +194,7 @@ export function initDiales(root) {
     B.p.forEach((col, i) => s.setProperty('--p' + i, col));
     s.setProperty('--font', B.font); s.setProperty('--hfont', B.hfont); s.setProperty('--case', B.case);
     s.setProperty('--radius-card', String(B.radius));
-    root.toggleAttribute('data-dark-cards', B.darkCards && state.c > 0.45);
+    s.setProperty('--ci', B.ci); s.setProperty('--paper', B.paper);
     root.dataset.brand = state.b;
     root.querySelector('#wear').textContent = state.b === 'minervo' ? '' : '× ' + B.name;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', B.g);
@@ -259,7 +260,7 @@ export function initDiales(root) {
     // la composición tal como está (estado final, sin transición)
     const clone = comp.cloneNode(true);
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    clone.setAttribute('width', '1100'); clone.setAttribute('height', String(Math.round(1100 * H / W)));
+    clone.setAttribute('width', '900'); clone.setAttribute('height', '900');
     const cs = getComputedStyle(root);
     clone.querySelectorAll('.sh').forEach((s) => {
       ['fill', 'stroke'].forEach((p) => {
@@ -271,13 +272,13 @@ export function initDiales(root) {
     const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' }));
     const img = new Image();
     await new Promise((res) => { img.onload = res; img.onerror = res; img.src = url; });
-    ctx.drawImage(img, 50, 360 + (1000 - 1100 * H / W) / 2);
+    ctx.drawImage(img, 150, 400);
     URL.revokeObjectURL(url);
     await document.fonts.ready;
     ctx.fillStyle = B.t;
     ctx.font = '500 44px Geist, sans-serif';
     ctx.fillText(state.b === 'minervo' ? 'minərvo.studio' : 'minərvo × ' + B.name, 60, 110);
-    ctx.font = '400 180px Anton, Impact, sans-serif';
+    ctx.font = '800 180px Bricolage, Geist, sans-serif';
     ctx.fillText('Nº ' + n, 52, 320);
     ctx.font = '500 26px "Geist Mono", monospace';
     ctx.fillText(DIALS.map((d) => d.name + ' ' + Math.round(state[d.id] * 100)).join('  ·  ').toUpperCase(), 60, 1420);
