@@ -7,7 +7,7 @@ const links = [
   { href: '/#contacto', label: 'contacto' },
 ];
 ---
-<header class="nav">
+<header class="nav" transition:persist="nav">
   <div class="wrap">
     <a class="wm" href="/#inicio"><Wordmark /></a>
     <nav class="links" aria-label="Principal">
@@ -23,7 +23,7 @@ const links = [
   </div>
 </header>
 
-<div class="menu" id="menu" hidden>
+<div class="menu" id="menu" hidden transition:persist="menu">
   <nav aria-label="Menú">
     {links.map((l, i) => (
       <a href={l.href} style={`--i:${i}`}><span class="mono">0{i + 1}</span>{l.label}</a>

@@ -317,3 +317,6 @@ html.is-loading canvas#c{pointer-events:none}
 /* escena 3D: encima del canvas 2D (que sigue recibiendo el puntero), debajo del contenido */
 .scene3d{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:0;pointer-events:none;display:block}
 html.is-loading .scene3d{z-index:7}
+/* escena continua: mientras se navega a un caso, las formas pasan por encima del contenido */
+html.is-navigating #c,html.is-navigating .scene3d{z-index:4}
+html.is-navigating main{transition:opacity .4s ease;opacity:.15}

@@ -188,6 +188,13 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       const list = shapes.slice().sort((a, b) => ang(a.position.x - cx, a.position.y - cy) - ang(b.position.x - cx, b.position.y - cy));
       const targets = pts.map((q) => ({ ...q, a: ang(q.x - r.width / 2, q.y - r.height / 2) })).sort((a, b) => a.a - b.a);
       list.forEach((b, i) => { if (i < targets.length) setTarget(b, el, targets[i].x, targets[i].y, p); });
+    } else if (type === 'fill') {
+      // todas las formas llenan un rectángulo: es la "pantalla" que se vuelve el video del caso
+      const el = sec.querySelector('[data-anchor]');
+      const r = el.getBoundingClientRect();
+      const list = shapes.slice().sort(byX);
+      const { pts, p } = gridPoints(r.width, r.height, list.length);
+      list.forEach((b, i) => setTarget(b, el, pts[i].x, pts[i].y, p * 1.15));
     } else if (type === 'stripes') {
       const el = sec.querySelector('[data-anchor]');
       const r = el.getBoundingClientRect();
@@ -280,7 +287,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   }, { passive: true });
 
   /* ---------- dibujo ---------- */
-  const stripeEls = [...document.querySelectorAll('[data-stripes]')];
+  let stripeEls = [...document.querySelectorAll('[data-stripes]')];
   const ink = color('ink'), line = color('line');
   function path(b) {
     const v = b.vertices;
@@ -320,7 +327,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
   }
 
   /* ---------- scroll → formación ---------- */
-  const sections = [...document.querySelectorAll('[data-mode]')];
+  let sections = [...document.querySelectorAll('[data-mode]')];
   let introDone = false;
   function pickSection() {
     const mid = H * 0.5;
@@ -462,6 +469,27 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       r.resize(W, H);
       render3d = r;
       document.documentElement.classList.add('is-3d');
+      document.addEventListener('astro:after-swap', () => document.documentElement.classList.add('is-3d'));
+    },
+    // Escena continua entre páginas: después de cambiar de página, vuelve a leer las secciones
+    // y las franjas del documento nuevo; las formas siguen donde estaban y van a su nueva formación.
+    rescan() {
+      sections = [...document.querySelectorAll('[data-mode]')];
+      stripeEls = [...document.querySelectorAll('[data-stripes]')];
+      document.getElementById('loader')?.remove(); // el loader solo existe en la primera carga
+      document.documentElement.classList.remove('is-loading');
+      modeSec = null;
+      introDone = true;
+      onScroll();
+    },
+    // Antes de entrar a un caso: las formas llenan un rectángulo 16:9 al centro de la pantalla.
+    toScreen() {
+      const w = Math.min(W * 0.78, 1100), h = w * 9 / 16;
+      const rect = { left: (W - w) / 2, top: (H - h) / 2 + 20, width: w, height: h };
+      const el = { getBoundingClientRect: () => rect, dataset: {} };
+      const sec = { dataset: { mode: 'fill' }, querySelector: () => el };
+      setMode(sec);
+      introDone = false; // mientras navega, el scroll no cambia la formación
     },
     // Remezcla la formación actual (solo la ə): las piezas cambian de lugar sonando al llegar.
     remix() {

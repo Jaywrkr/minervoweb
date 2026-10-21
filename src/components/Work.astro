@@ -37,6 +37,8 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 </section>
 
 <script>
+  // se conecta en cada página (el router de Astro cambia el contenido sin recargar)
+  document.addEventListener('astro:page-load', () => {
   const list = document.getElementById('workList');
   const peek = document.getElementById('peek');
   const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -80,4 +82,5 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
       row.addEventListener('focus', () => show(Number(row.dataset.i)));
     });
   }
+  });
 </script>

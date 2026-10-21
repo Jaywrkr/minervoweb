@@ -17,6 +17,11 @@ export function initCursor(scene) {
   el.setAttribute('aria-hidden', 'true');
   document.body.appendChild(el);
   document.documentElement.classList.add('has-cursor');
+  // al cambiar de página, el router reemplaza el body y los atributos de <html>: se vuelve a poner
+  document.addEventListener('astro:after-swap', () => {
+    document.body.appendChild(el);
+    document.documentElement.classList.add('has-cursor');
+  });
 
   let x = -100, y = -100, cx = x, cy = y, visible = false, state = '';
   window.addEventListener('pointermove', (e) => {
@@ -52,7 +57,7 @@ export function initCursor(scene) {
 // Sin JS o con movimiento reducido, los titulares se ven normales.
 export function initReveal() {
   if (reduce() || !('IntersectionObserver' in window)) return;
-  const heads = [...document.querySelectorAll('main h1, main h2')];
+  const heads = [...document.querySelectorAll('main h1, main h2')].filter((h) => !h.classList.contains('rv'));
   heads.forEach((h) => {
     const text = h.textContent.replace(/\s+/g, ' ').trim();
     split(h);
@@ -111,6 +116,7 @@ function split(node) {
 export function initMagnetic() {
   if (reduce() || !fine()) return;
   document.querySelectorAll('.pill, .btn, .key').forEach((el) => {
+    if (el.classList.contains('mag')) return; // ya conectado (elementos que persisten entre páginas)
     const strength = el.classList.contains('key') ? 0.18 : 0.28;
     el.classList.add('mag');
     el.addEventListener('pointermove', (e) => {
@@ -153,6 +159,7 @@ export function initSmoothScroll() {
 export function initScrub() {
   if (reduce()) return;
   document.querySelectorAll('[data-scrub]').forEach((el) => {
+    if (el.classList.contains('scrub')) return;
     const text = el.textContent.replace(/\s+/g, ' ').trim();
     split(el);
     const sr = document.createElement('span');
