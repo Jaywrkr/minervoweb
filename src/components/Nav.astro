@@ -1,15 +1,63 @@
 ---
 import Wordmark from './Wordmark.astro';
+const links = [
+  { href: '/#trabajo', label: 'trabajo' },
+  { href: '/#servicios', label: 'servicios' },
+  { href: '/#estudio', label: 'estudio' },
+  { href: '/#contacto', label: 'contacto' },
+];
 ---
 <header class="nav">
   <div class="wrap">
     <a class="wm" href="/#inicio"><Wordmark /></a>
     <nav class="links" aria-label="Principal">
-      <a href="/#trabajo">trabajo</a><a href="/#servicios">servicios</a><a href="/#estudio">estudio</a>
+      {links.slice(0, 3).map((l) => <a href={l.href}>{l.label}</a>)}
     </nav>
     <div class="navr">
       <button class="btn" id="sound" type="button" aria-pressed="false"><span class="dot"></span><span id="soundTxt">sonido</span></button>
       <a class="btn solid" href="/#contacto">hablemos</a>
+      <button class="btn menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu">
+        <span class="menu-ico" aria-hidden="true"><i></i><i></i></span><span id="menuTxt">menú</span>
+      </button>
     </div>
   </div>
 </header>
+
+<div class="menu" id="menu" hidden>
+  <nav aria-label="Menú">
+    {links.map((l, i) => (
+      <a href={l.href} style={`--i:${i}`}><span class="mono">0{i + 1}</span>{l.label}</a>
+    ))}
+  </nav>
+  <div class="menu-foot mono">minərvo.studio · diseño, código y movimiento</div>
+</div>
+
+<script>
+  const btn = document.getElementById('menuBtn');
+  const menu = document.getElementById('menu');
+  const label = document.getElementById('menuTxt');
+  const root = document.documentElement;
+
+  function setOpen(open: boolean) {
+    if (!btn || !menu) return;
+    btn.setAttribute('aria-expanded', String(open));
+    if (label) label.textContent = open ? 'cerrar' : 'menú';
+    root.classList.toggle('menu-open', open);
+    if (open) {
+      menu.hidden = false;
+      requestAnimationFrame(() => menu.classList.add('is-open'));
+      menu.querySelector('a')?.focus();
+    } else {
+      menu.classList.remove('is-open');
+      setTimeout(() => { if (!menu.classList.contains('is-open')) menu.hidden = true; }, 300);
+    }
+  }
+
+  btn?.addEventListener('click', () => setOpen(btn.getAttribute('aria-expanded') !== 'true'));
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && btn?.getAttribute('aria-expanded') === 'true') { setOpen(false); btn.focus(); }
+  });
+  // si la pantalla crece a escritorio con el menú abierto, se cierra
+  matchMedia('(min-width: 761px)').addEventListener('change', (e) => { if (e.matches) setOpen(false); });
+</script>
