@@ -18,11 +18,12 @@ src/
   scripts/render3d.js    render 3D de las formas (Three.js): luz, sombras, materiales
   scripts/support3d.js   decide 3D o 2D (sin WebGL, movimiento reducido o ?escena=2d → 2D)
   pages/lab/3d.astro     laboratorio 3D (fuera del sitemap)
-  scripts/audio.js       sonido sintetizado de cada forma
+  scripts/audio.js       motor de sonido: muestras o síntesis, tempo 96 bpm, música adaptativa
   scripts/formations.js  puntos de la ə, grillas y franjas op-art
   scripts/kinds.js       las 6 formas, colores e iconos
   styles/global.css      tokens y estilos
 public/prototipos/       prototipos sueltos
+public/sounds/           grabaciones (ver su README); manifest.json se genera solo
 brand/                   sistema visual 2026: guía, tokens y plantillas de Instagram
 ```
 

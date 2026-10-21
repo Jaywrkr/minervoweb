@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "sounds": "node scripts/sounds-manifest.mjs",
+    "predev": "node scripts/sounds-manifest.mjs",
+    "prebuild": "node scripts/sounds-manifest.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
