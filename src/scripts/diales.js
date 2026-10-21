@@ -4,6 +4,7 @@
 // y su número de edición sale del propio estado: la misma combinación siempre es la misma edición.
 
 import { VOICES } from './voces.js';
+import { initVida } from './vida.js';
 
 const DIALS = [
   { id: 'e', name: 'escala' },
@@ -85,16 +86,18 @@ export function initDiales(root) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const state = { e: 0.5, r: 0.5, c: 0.85, k: 0, b: 'minervo' };
   readHash();
+  const vida = initVida(root);
 
   /* ---------- titular: cada letra con su propio azar ---------- */
   const h1 = root.querySelector('#h1');
   function buildH1(text, hl) {
     const Rh = rng(7);
     h1.setAttribute('aria-label', text);
+    let li = 0;
     h1.innerHTML = text.split(' ')
-      .map((w, wi) => (wi === hl ? '<span class="w hlw" style="--cc:var(--p1)" data-cc="p1" data-solid>' : '<span class="w">') + [...w].map((ch) =>
-        `<span class="ch" aria-hidden="true" style="--rx:${(Rh() * 2 - 1).toFixed(3)};--ry:${(Rh() * 2 - 1).toFixed(3)};--rr:${(Rh() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
-      .join(' ');
+      .map((w, wi) => (wi === hl ? `<span class="w hlw" style="--cc:var(--p1);--hl0:${li}" data-cc="p1" data-solid>` : '<span class="w">') + [...w].map((ch) =>
+        `<span class="ch" aria-hidden="true" style="--li:${li++};--rx:${(Rh() * 2 - 1).toFixed(3)};--ry:${(Rh() * 2 - 1).toFixed(3)};--rr:${(Rh() * 2 - 1).toFixed(3)}">${ch}</span>`).join('') + '</span>')
+      .join(' ') + '<span class="caret" aria-hidden="true"></span>';
   }
   const R = rng(11);
 
@@ -103,6 +106,7 @@ export function initDiales(root) {
   let copyBrand = '';
   function setCopy(brand) {
     if (brand === copyBrand) return;
+    const first = !copyBrand;
     copyBrand = brand;
     const V = VOICES[brand] || VOICES.minervo;
     root.querySelectorAll('[data-t]').forEach((el) => {
@@ -112,6 +116,7 @@ export function initDiales(root) {
     buildH1(V.h1, V.hl);
     const items = V.ticker.map((t) => `<span>${t}<i>${V.sep}</i></span>`).join('');
     track.innerHTML = items + items;
+    vida.brand(brand, first);
   }
 
   // tarjetas y filas: también con su azar
@@ -133,7 +138,7 @@ export function initDiales(root) {
     const key = kinds.join();
     if (key === compKinds) return;
     compKinds = key;
-    comp.innerHTML = seeds.map((sd, i) => `<g data-i="${i}">${shapeSVG(kinds[Math.floor(sd.pick * kinds.length)])}</g>`).join('') + '<g class="ov"></g>';
+    comp.innerHTML = seeds.map((sd, i) => `<g data-i="${i}"><g class="fl" style="--d:${(sd.pick * 6).toFixed(2)}">${shapeSVG(kinds[Math.floor(sd.pick * kinds.length)])}</g></g>`).join('') + '<g class="ov"></g>';
   }
 
   function layoutShapes() {
