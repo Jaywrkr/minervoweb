@@ -13,7 +13,7 @@ const { Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Query }
 const ALL = 0xffffffff;
 const MAX_SHAPES = 72;
 
-export function initFormas({ canvas, soundButton, soundLabel, pads }) {
+export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl }) {
   const css = getComputedStyle(document.documentElement);
   const color = (token) => css.getPropertyValue('--' + token).trim();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -114,6 +114,20 @@ export function initFormas({ canvas, soundButton, soundLabel, pads }) {
     b.collisionFilter.mask = 0; // en formación no chocan entre ellas
   }
 
+  // Asigna formas para dibujar la ə dentro de `el`. El punto siempre son círculos menta.
+  function formGlyph(el) {
+    const r = el.getBoundingClientRect();
+    const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(64, Math.max(shapes.length, 46)));
+    const circles = shapes.filter((b) => b.plugin.kind.id === 'circulo');
+    while (circles.length < dot.length) circles.push(spawn(KINDS[0]));
+    while (shapes.length < glyph.length + dot.length) spawn(KINDS[1 + Math.floor(Math.random() * 5)]);
+    circles.slice().sort(byX).reverse().slice(0, dot.length)
+      .forEach((b, i) => setTarget(b, el, dot[i].x, dot[i].y, p));
+    const rest = shapes.filter((b) => !assign.has(b)).sort(byX);
+    const pts = glyph.slice().sort((a, b) => a.x - b.x);
+    rest.forEach((b, i) => { if (i < pts.length) setTarget(b, el, pts[i].x, pts[i].y, p); });
+  }
+
   function setMode(sec, quiet = false) {
     building = true;
     const type = sec ? sec.dataset.mode : 'chaos';
@@ -121,18 +135,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads }) {
     assign.clear();
 
     if (type === 'glyph') {
-      const el = sec.querySelector('[data-anchor]');
-      const r = el.getBoundingClientRect();
-      const { glyph, dot, p } = glyphPoints(r.width, r.height, Math.min(64, Math.max(shapes.length, 46)));
-      const circles = shapes.filter((b) => b.plugin.kind.id === 'circulo');
-      while (circles.length < dot.length) circles.push(spawn(KINDS[0]));
-      while (shapes.length < glyph.length + dot.length) spawn(KINDS[1 + Math.floor(Math.random() * 5)]);
-      // el punto siempre son círculos menta
-      circles.slice().sort(byX).reverse().slice(0, dot.length)
-        .forEach((b, i) => setTarget(b, el, dot[i].x, dot[i].y, p));
-      const rest = shapes.filter((b) => !assign.has(b)).sort(byX);
-      const pts = glyph.slice().sort((a, b) => a.x - b.x);
-      rest.forEach((b, i) => { if (i < pts.length) setTarget(b, el, pts[i].x, pts[i].y, p); });
+      formGlyph(sec.querySelector('[data-anchor]'));
     } else if (type === 'slots') {
       sec.querySelectorAll('[data-slot]').forEach((el) => {
         const k = kindOf(el.dataset.slot);
@@ -310,14 +313,61 @@ export function initFormas({ canvas, soundButton, soundLabel, pads }) {
   /* ---------- arranque ---------- */
   resize();
   const n = W < 700 ? 20 : 30;
-  for (let i = 0; i < n; i++) {
-    spawn(KINDS[i % 6], S * 2 + Math.random() * Math.max(1, W - S * 4),
-      reduce ? H * 0.6 - Math.random() * H * 0.4 : -S * 2 - i * S * 1.4, reduce ? 0 : 4);
+  const fontsReady = document.fonts?.load
+    ? Promise.race([document.fonts.load('600 100px Geist').catch(() => {}), new Promise((r) => setTimeout(r, 2500))])
+    : Promise.resolve();
+  const formHero = (delay) => setTimeout(() => { introDone = true; onScroll(); }, delay);
+
+  let seen = false;
+  try { seen = sessionStorage.getItem('mnv-intro') === '1'; } catch (e) {}
+  const loader = loaderEl && !reduce && !seen ? loaderEl : null;
+
+  if (loader) {
+    // Loader: las formas aparecen ya armando la ə, sostienen un momento y se rompen en caos.
+    document.documentElement.classList.add('is-loading');
+    building = true;
+    for (let i = 0; i < n; i++) {
+      const b = spawn(KINDS[i % 6], W / 2, -S * 10, 0);
+      b.collisionFilter.mask = 0;
+      Body.setStatic(b, true); // esperan fuera de pantalla hasta que la fuente esté lista
+    }
+    building = false;
+    fontsReady.then(() => {
+      shapes.forEach((b) => Body.setStatic(b, false));
+      formGlyph(loader.querySelector('[data-anchor]'));
+      const rects = new Map();
+      for (const [b, a] of assign) {
+        let r = rects.get(a.el);
+        if (!r) { r = a.el.getBoundingClientRect(); rects.set(a.el, r); }
+        Body.setPosition(b, { x: r.left + a.x, y: r.top + a.y });
+        Body.setVelocity(b, { x: 0, y: 0 });
+        Body.setAngle(b, 0);
+        Body.scale(b, 0.05 / b.plugin.sc, 0.05 / b.plugin.sc); // crecen desde cero en su sitio
+        b.plugin.sc = 0.05;
+        b.plugin.arrived = true;
+      }
+      shapes.filter((b) => !assign.has(b)).forEach((b) => Body.setPosition(b, { x: b.position.x, y: -S * 4 }));
+      modeType = 'glyph';
+      setTimeout(() => {
+        loader.classList.add('is-done');
+        setMode(null); // se rompe: estallido y gravedad
+        try { sessionStorage.setItem('mnv-intro', '1'); } catch (e) {}
+        setTimeout(() => {
+          document.documentElement.classList.remove('is-loading');
+          loader.remove();
+        }, 700);
+        formHero(1800);
+      }, 1300);
+    });
+  } else {
+    loaderEl?.remove();
+    for (let i = 0; i < n; i++) {
+      spawn(KINDS[i % 6], S * 2 + Math.random() * Math.max(1, W - S * 4),
+        reduce ? H * 0.6 - Math.random() * H * 0.4 : -S * 2 - i * S * 1.4, reduce ? 0 : 4);
+    }
+    // primero caos; al segundo y medio las formas arman la marca
+    fontsReady.then(() => formHero(reduce ? 0 : 1600));
   }
-  // primero caos; al segundo y medio las formas arman la marca
-  const start = () => setTimeout(() => { introDone = true; onScroll(); }, reduce ? 0 : 1600);
-  if (document.fonts?.load) document.fonts.load('600 100px Geist').then(start, start);
-  else start();
 
   let lastT = performance.now();
   (function loop(t = performance.now()) {

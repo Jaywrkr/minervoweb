@@ -118,3 +118,15 @@ footer.site a{text-decoration:none}
 .key:hover,.key.hit{border-color:var(--ink)}
 .key svg{width:20px;height:20px}
 @media (max-width:760px){.keys{display:none}}
+
+/* loader */
+.loader{position:fixed;inset:0;z-index:6;background:var(--ground);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .6s ease;animation:loaderOut .4s ease 4s forwards}
+.loader.is-done{opacity:0;pointer-events:none}
+.loader-anchor{width:min(56vmin,520px);height:min(56vmin,520px)}
+.loader-foot{position:absolute;left:0;right:0;bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));color:var(--muted)}
+html.is-loading canvas#c{z-index:7}
+html.is-loading body{overflow:hidden}
+@keyframes loaderOut{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.loader{display:none}}
