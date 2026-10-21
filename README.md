@@ -33,4 +33,4 @@ npm run dev      # http://localhost:4321
 npm run build    # sitio estático en dist/
 ```
 
-Stack: Astro + Matter.js. Fuentes: Geist, Geist Mono y Anton (Google Fonts).
+Stack: Astro + Matter.js. Fuentes propias en `public/fonts` (Geist, Geist Mono y Anton, licencia SIL OFL).

@@ -1,3 +1,7 @@
+/* fuentes propias (SIL OFL, ver public/fonts) */
+@font-face{font-family:"Geist";src:url("/fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url("/fonts/GeistMono-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Anton";src:url("/fonts/Anton-Regular.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0}
 /* Layout: a fixed physics canvas behind a scrolling one-page site. Each section names a formation the shapes take while it is centered. */
@@ -161,3 +165,7 @@ html.is-loading body{overflow:hidden}
 .next-link:hover::after{transform:translateY(-50%) scale(1)}
 .next-link strong{font-size:clamp(36px,5vw,72px);line-height:.95;font-weight:600;letter-spacing:-.04em;max-width:75%}
 .next-link .mono{color:var(--muted)}
+
+/* accesibilidad */
+.skip{position:fixed;left:max(16px,env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:20;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--on);text-decoration:none;font-size:15px;transform:translateY(-200%);transition:transform .2s}
+.skip:focus{transform:none}
