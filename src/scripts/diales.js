@@ -50,6 +50,14 @@ const BRANDS = {
     shapes: ['circulo'],
     rules: { wmax: 900, angles: true, density: 1, border: 15, mono: true, radar: true },
   },
+  // A Todo Terreno: arena, tinta y rojo de sello; Anton en mayúsculas; mapa topográfico con ruta
+  todoterreno: {
+    name: 'a todo terreno', g: '#f3ead5', t: '#14110d', ink: ['#14110d', '#f3eee2'], paper: '#f3eee2',
+    p: ['#c41e1e', '#d3ac66', '#b98a3a', '#241f18', '#14110d', '#e4cb98'],
+    font: '"JetBrains Mono",ui-monospace,monospace', hfont: 'var(--poster)', case: 'uppercase', radius: 2,
+    shapes: ['circulo'],
+    rules: { wmax: 900, angles: true, density: 1, border: 55, mono: true, route: true },
+  },
 };
 
 // color de texto legible sobre un fondo (mezcla aproximada del color con el papel según el contraste)
@@ -184,6 +192,37 @@ export function initDiales(root) {
       });
     });
     const ov = comp.querySelector('.ov');
+    // A Todo Terreno: mapa topográfico con la ruta secreta, pistas y un sello
+    if (rules.route) {
+      comp.querySelectorAll('g[data-i]').forEach((g) => { g.style.opacity = '0'; });
+      const L = (VOICES[state.b] || {}).art || [];
+      const rings = Math.round(lerp(4, 9, r)), cx0 = 560, cy0 = 470;
+      let svg = '';
+      for (let j = 0; j < rings; j++) {
+        const rad = (60 + j * 52) * lerp(0.8, 1.2, e);
+        let d = '';
+        for (let a = 0; a <= 48; a++) {
+          const t = (a / 48) * Math.PI * 2;
+          const w = 1 + 0.16 * Math.sin(t * 3 + j) + 0.08 * Math.cos(t * 5 - j * 0.7) + k * 0.12 * Math.sin(t * 7 + j * 2);
+          d += `${a ? 'L' : 'M'}${(cx0 + Math.cos(t) * rad * w * 1.25).toFixed(1)} ${(cy0 + Math.sin(t) * rad * w).toFixed(1)}`;
+        }
+        svg += `<path d="${d}Z" fill="none" stroke="currentColor" stroke-opacity="${(0.14 + j * 0.015).toFixed(3)}" stroke-width="1.5"/>`;
+      }
+      const wp = L.map((_, i) => {
+        const f = i / (L.length - 1);
+        return [lerp(110, 860, f) + (seeds[i].x - 0.5) * 120 * (0.4 + k), lerp(860, 170, f) + Math.sin(f * 5 + e * 3) * 110 + (seeds[i].y - 0.5) * 140 * k];
+      });
+      let rd = `M${wp[0][0].toFixed(1)} ${wp[0][1].toFixed(1)}`;
+      for (let i = 1; i < wp.length; i++) {
+        const [ax, ay] = wp[i - 1], [bx, by] = wp[i];
+        rd += `Q${((ax + bx) / 2 + (ay - by) * 0.35).toFixed(1)} ${((ay + by) / 2 + (bx - ax) * 0.35).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`;
+      }
+      svg += `<path class="rt" d="${rd}" fill="none" stroke="#c41e1e" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 16"/>`;
+      svg += wp.map(([x, y], i) => `<g class="wp" style="--d:${i * 0.25}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${i === wp.length - 1 ? 16 : 10}" fill="${i === wp.length - 1 ? '#c41e1e' : 'currentColor'}"/><text x="${(x + 22).toFixed(1)}" y="${(y - 18).toFixed(1)}" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700" fill="currentColor">${L[i]}</text></g>`).join('');
+      svg += `<g class="stamp" transform="translate(800 820) rotate(-14)"><circle r="104" fill="none" stroke="#c41e1e" stroke-width="6"/><circle r="86" fill="none" stroke="#c41e1e" stroke-width="2"/><text text-anchor="middle" y="-14" font-family="Anton, Impact, sans-serif" font-size="46" fill="#c41e1e">SELLADO</text><text text-anchor="middle" y="30" font-family="JetBrains Mono, monospace" font-size="20" font-weight="700" letter-spacing="3" fill="#c41e1e">AT26 · ${String(edition()).padStart(4, '0')}</text></g>`;
+      ov.innerHTML = svg;
+      return;
+    }
     // ANKLA: un radar de vida en lugar de formas; cada dial mueve sus áreas
     if (rules.radar) {
       comp.querySelectorAll('g[data-i]').forEach((g) => { g.style.opacity = '0'; });

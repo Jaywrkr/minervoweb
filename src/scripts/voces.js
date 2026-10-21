@@ -91,4 +91,27 @@ export const VOICES = {
     ],
     art: ['identidad', 'web', 'motion', 'voz', 'redes', 'experiencia', 'producto', 'equipo'],
   },
+
+  // A Todo Terreno: aventura, misterio, expedición. Titulares en mayúsculas, sellos y pasaporte.
+  todoterreno: {
+    kicker: 'DOCUMENTO DE EXPEDICIÓN · N.º AT26-000000',
+    h1: 'Nadie sabe a dónde va tu marca. Todavía.', hl: 7,
+    lead: 'Subes sin saber a dónde te llevamos. Bajas entendiendo por qué. Diseño, código y movimiento para marcas que no fallan a las 6 AM, bajo la lluvia.',
+    cta: 'SELLAR MI LUGAR →',
+    nav: ['RUTA', 'EXPEDICIONES', 'CAMPAMENTO', 'CONTACTO'],
+    nums: ['PASO 1', 'PASO 2', 'PASO 3', 'PASO 4'],
+    ticker: ['a todo terreno', 'convoy', 'pasaporte', 'ruta secreta', 'sello', 'km 0'], sep: '✕',
+    services: [
+      { t: 'Identidad', d: 'Tu marca con pasaporte propio.', l: ['Nombre', 'Sistema', 'Sellos'] },
+      { t: 'Web', d: 'De formulario a pasaporte.', l: ['Registro', 'Experiencia', 'Desbloqueos'] },
+      { t: 'Motion', d: 'El polvo se asienta cuando tocas.', l: ['Intro', 'Conteo regresivo', 'Pistas'] },
+      { t: 'Experiencias', d: 'Eventos donde nadie sabe a dónde va.', l: ['Convenciones', 'Convoy', 'Rutas'] },
+    ],
+    work: [
+      { t: 'Expedición 01', m: 'KM 0 → KM 240 · identidad' },
+      { t: 'Expedición 02', m: 'KM 0 → KM 90 · experiencia' },
+      { t: 'Expedición 03', m: 'KM 0 → KM 30 · web' },
+    ],
+    art: ['KM 0', 'PISTA 1', 'PISTA 2', 'PISTA 3', 'DESTINO ?'],
+  },
 };
