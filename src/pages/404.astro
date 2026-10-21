@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import Scene from '../components/Scene.astro';
+import Nav from '../components/Nav.astro';
+---
+<Base title="404 — minərvo.studio" description="Esta página no existe." noindex>
+  <Nav />
+  <main>
+    <section class="lost" data-mode="chaos">
+      <div class="wrap">
+        <span class="mono eyebrow">error 404</span>
+        <h1>esta página no existe.<br /><span>las formas sí.</span></h1>
+        <p>Tócalas, arrástralas o usa las teclas A–H mientras vuelves al inicio.</p>
+        <div class="ctas">
+          <a class="pill menta" href="/">volver al inicio</a>
+          <a class="pill ghost" href="/#trabajo">ver trabajo</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Scene />
+</Base>
+
+<style>
+  .lost { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; padding-block: 120px 160px; }
+  .lost .wrap { width: 100%; display: flex; flex-direction: column; gap: 24px; }
+  h1 { margin: 0; font-size: clamp(48px, 8vw, 120px); line-height: 0.92; font-weight: 600; letter-spacing: -0.05em; text-wrap: balance; }
+  h1 span { color: var(--rosa); }
+  p { margin: 0; max-width: 30em; font-size: 19px; line-height: 29px; color: #c9c6ce; }
+</style>
