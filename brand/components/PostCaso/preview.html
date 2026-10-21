@@ -1,0 +1,59 @@
+<!-- @dsCard group="Instagram" height=388 -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Post · Caso — preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;background:var(--ground);font-family:var(--font-sans);}
+  .row{display:flex;flex-wrap:wrap;gap:var(--space-3);padding:var(--space-3);}
+  .post{width:272px;height:340px;box-sizing:border-box;padding:var(--space-3);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+  .p1{background:#0b0b0d;color:#f3f0e8;outline:1px solid var(--line);}
+  .p2{background:var(--violeta);color:var(--white);}
+  .label{font-family:var(--font-mono);font-size:10px;line-height:14px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;display:flex;justify-content:space-between;}
+  .screen{height:170px;border-radius:var(--radius-md);background:#17171a;overflow:hidden;position:relative;}
+  .p2 .screen{background:#f3f0e8;}
+  .bar{height:14px;display:flex;gap:4px;align-items:center;padding:0 8px;}
+  .bar i{width:5px;height:5px;border-radius:var(--radius-pill);background:#3a3a40;}
+  .blk{position:absolute;}
+  .name{font-size:26px;line-height:1;font-weight:600;letter-spacing:-.02em;margin:0;}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;}
+  .wm{font-size:11px;font-weight:500;}
+  .dot{color:var(--punto);}
+  .play{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="post p1">
+    <div class="label"><span>caso 03 · web</span><span>2026</span></div>
+    <div class="screen">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="blk" style="left:16px;top:30px;width:120px;height:64px;background:var(--naranja)"></div>
+      <div class="blk" style="left:148px;top:30px;width:56px;height:56px;border-radius:999px;background:var(--menta)"></div>
+      <div class="blk" style="left:16px;top:106px;width:180px;height:10px;background:#3a3a40"></div>
+      <div class="blk" style="left:16px;top:124px;width:120px;height:10px;background:#3a3a40"></div>
+      <div class="blk" style="left:16px;top:142px;width:64px;height:16px;border-radius:999px;background:var(--mostaza)"></div>
+    </div>
+    <div class="foot">
+      <p class="name">marca cliente<br>experiencia web</p>
+      <span class="play">▶ 0:15</span>
+    </div>
+  </div>
+  <div class="post p2">
+    <div class="label"><span>caso 04 · motion</span><span>2026</span></div>
+    <div class="screen">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="blk" style="left:20px;top:28px;width:100px;height:100px;border-radius:999px;background:var(--rosa)"></div>
+      <div class="blk" style="left:96px;top:60px;width:120px;height:40px;border-radius:999px;background:var(--verde)"></div>
+      <div class="blk" style="left:150px;top:110px;width:60px;height:44px;background:var(--mostaza)"></div>
+    </div>
+    <div class="foot">
+      <p class="name">lanzamiento<br>identidad viva</p>
+      <span class="wm">minərvo<span class="dot">.</span>studio</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

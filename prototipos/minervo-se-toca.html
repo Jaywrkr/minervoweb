@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>minərvo se toca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+/* Layout: one full-screen stage. Headline sits behind a physics canvas; header and shape pads float above it. */
+:root{
+  --ground:#0b0b0d; --ink:#f3f0e8; --muted:#9c9aa2; --line:#1d1d21; --raised:#17171a;
+  --violeta:#6b54b0; --rosa:#f29bc0; --naranja:#ec5b2c; --mostaza:#f2b83b; --menta:#8edcb2; --verde:#2e7d46;
+  --display:"Geist","Helvetica Neue",Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SFMono-Regular",monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ground);color:var(--ink);font-family:var(--display);overflow:hidden;-webkit-user-select:none;user-select:none}
+.stage{position:relative;height:100%;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;z-index:2}
+.mono{font-family:var(--mono);font-size:12px;line-height:16px;letter-spacing:.08em;text-transform:uppercase;font-weight:500}
+
+.bar{position:absolute;left:0;right:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
+.bar > *{pointer-events:auto}
+.top{top:0;padding-block:20px}
+.wm{font-size:22px;font-weight:500;letter-spacing:-.02em;color:var(--ink)}
+.wm i{font-style:normal;color:var(--menta)}
+.btn{font:inherit;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;
+  min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #3a3a40;background:var(--ground);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--ink)}
+.btn:focus-visible,.pad:focus-visible{outline:2px solid var(--menta);outline-offset:3px}
+.btn .dot{width:8px;height:8px;border-radius:999px;background:#3a3a40}
+.btn[aria-pressed="true"] .dot{background:var(--menta)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+.copy{position:absolute;z-index:1;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));
+  top:clamp(88px,16vh,160px);display:flex;flex-direction:column;gap:20px;pointer-events:none}
+.copy{transition:opacity .6s ease}
+.copy.dim{opacity:.12}
+.copy .mono{color:var(--muted)}
+h1{margin:0;font-size:clamp(52px,11vw,176px);line-height:.9;font-weight:600;letter-spacing:-.05em;text-wrap:balance;max-width:11ch}
+h1 span{color:var(--rosa)}
+
+.pads{bottom:0;padding-block:14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--ground) 70%,transparent);flex-wrap:wrap}
+.padrow{display:flex;gap:8px;flex-wrap:wrap}
+.pad{font:inherit;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px 0 10px;border-radius:12px;border:1px solid #2a2a2e;background:var(--raised);color:var(--ink);cursor:pointer}
+.pad:hover,.pad.hit{border-color:var(--ink)}
+.pad svg{width:24px;height:24px;flex:none}
+.pad kbd{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.pad .lbl{font-size:14px}
+.hint{color:var(--muted);max-width:340px;text-align:right}
+@media (max-width:760px){
+  .pad .lbl,.hint{display:none}
+  .pad{padding:0 12px}
+}
+@media (max-width:420px){ .btn{padding:0 12px} }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="copy" aria-hidden="false">
+    <span class="mono">prototipo 02 · minərvo.studio</span>
+    <h1>experiencias que se <span>mueven</span>.</h1>
+  </div>
+
+  <canvas id="c" aria-label="Escena interactiva: formas de color que caen, chocan y suenan. Arrástralas o tócalas." role="img"></canvas>
+
+  <header class="bar top">
+    <span class="wm">minərvo<i>.</i>studio</span>
+    <div class="actions">
+      <button class="btn" id="order" type="button" aria-pressed="false"><span class="dot"></span><span id="orderTxt">formar ə</span></button>
+      <button class="btn" id="sound" type="button" aria-pressed="false"><span class="dot"></span><span id="soundTxt">sonido</span></button>
+    </div>
+  </header>
+
+  <footer class="bar pads" id="pads">
+    <div class="padrow" id="padrow"></div>
+    <span class="mono hint">toca o arrastra las formas · teclas A–H · espacio para formar la ə</span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script>
+(function(){
+const {Engine,Bodies,Body,Composite,Events,Mouse,MouseConstraint,Query} = Matter;
+const css = getComputedStyle(document.documentElement);
+const C = n => css.getPropertyValue('--'+n).trim();
+const KINDS = [
+  {id:'circulo',   name:'círculo',    key:'a', color:C('menta')},
+  {id:'dona',      name:'dona',       key:'s', color:C('naranja')},
+  {id:'luna',      name:'media luna', key:'d', color:C('mostaza')},
+  {id:'triangulo', name:'triángulo',  key:'f', color:C('verde')},
+  {id:'pildora',   name:'píldora',    key:'g', color:C('rosa')},
+  {id:'cuadrado',  name:'cuadrado',   key:'h', color:C('violeta')}
+];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- audio ---------- */
+let actx=null, master=null, soundOn=false, voices=0, noiseBuf=null;
+const PENTA=[0,3,5,7,10,12,15,17];
+const hz = (base,semi)=> base*Math.pow(2,semi/12);
+function initAudio(){
+  if(actx) return true;
+  const A = window.AudioContext||window.webkitAudioContext; if(!A) return false;
+  actx = new A();
+  const comp = actx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=4;
+  master = actx.createGain(); master.gain.value=0.8;
+  master.connect(comp); comp.connect(actx.destination);
+  noiseBuf = actx.createBuffer(1, actx.sampleRate*0.5, actx.sampleRate);
+  const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return true;
+}
+function setSound(on){
+  if(on && !initAudio()) return;
+  soundOn=on;
+  if(actx){ if(on) actx.resume(); master.gain.setTargetAtTime(on?0.8:0, actx.currentTime, 0.02); }
+  const b=document.getElementById('sound'); b.setAttribute('aria-pressed', on?'true':'false');
+  document.getElementById('soundTxt').textContent = on?'sonido on':'sonido';
+}
+function env(g,t,peak,dec){ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+dec); }
+function voice(dur){ voices++; setTimeout(()=>voices--, dur*1000+50); }
+function noise(t,dur,type,f,q,peak){
+  const s=actx.createBufferSource(); s.buffer=noiseBuf;
+  const fl=actx.createBiquadFilter(); fl.type=type; fl.frequency.value=f; fl.Q.value=q||1;
+  const g=actx.createGain(); env(g,t,peak,dur);
+  s.connect(fl); fl.connect(g); g.connect(master); s.start(t); s.stop(t+dur+0.05);
+}
+function tone(t,type,f0,f1,dur,peak,filter){
+  const o=actx.createOscillator(); o.type=type; o.frequency.setValueAtTime(f0,t);
+  if(f1) o.frequency.exponentialRampToValueAtTime(f1,t+dur*0.8);
+  const g=actx.createGain(); env(g,t,peak,dur);
+  if(filter){ const fl=actx.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=filter; o.connect(fl); fl.connect(g); }
+  else o.connect(g);
+  g.connect(master); o.start(t); o.stop(t+dur+0.05);
+}
+function play(kind, note, vel, delay){
+  if(!soundOn||!actx||voices>28) return;
+  const v=Math.max(0.08,Math.min(1,vel)); const t=actx.currentTime+(delay||0)+0.005;
+  switch(kind){
+    case 'circulo':   tone(t,'sine',150,42,0.38,0.9*v); voice(.4); break;                        // bombo
+    case 'dona':      tone(t,'sine',hz(196,PENTA[note%5]),null,0.32,0.55*v); tone(t,'sine',hz(196,PENTA[note%5])*0.5,null,0.32,0.3*v); voice(.35); break; // tom
+    case 'luna':      tone(t,'triangle',hz(392,PENTA[note]),null,0.5,0.4*v,2400); voice(.5); break;  // marimba
+    case 'triangulo': noise(t,0.06,'highpass',7500,0.7,0.35*v); voice(.08); break;                // hi-hat
+    case 'pildora':   tone(t,'sawtooth',hz(65.4,PENTA[note]),null,0.34,0.42*v,520); voice(.35); break; // bajo
+    case 'cuadrado':  noise(t,0.16,'bandpass',1900,0.9,0.6*v); tone(t,'triangle',190,120,0.09,0.35*v); voice(.18); break; // caja
+  }
+}
+
+/* ---------- physics ---------- */
+const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+const engine=Engine.create({enableSleeping:false}); engine.gravity.y = reduce?0:1;
+const world=engine.world;
+let W=0,H=0,DPR=1,S=40,floorY=0,walls=[];
+const shapes=[];
+
+function makeWalls(){
+  walls.forEach(w=>Composite.remove(world,w));
+  const t=200;
+  walls=[
+    Bodies.rectangle(W/2, floorY+t/2, W*3, t, {isStatic:true}),
+    Bodies.rectangle(-t/2, H/2, t, H*4, {isStatic:true}),
+    Bodies.rectangle(W+t/2, H/2, t, H*4, {isStatic:true})
+  ];
+  walls.forEach(w=>w.plugin.wall=true);
+  Composite.add(world,walls);
+}
+function resize(){
+  const r=canvas.getBoundingClientRect();
+  W=r.width; H=r.height; DPR=Math.min(2,Math.max(1,Math.round(window.devicePixelRatio||1)));
+  canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+  canvas.setAttribute('data-pixel-ratio',DPR);
+  S=Math.max(26,Math.min(64,Math.min(W,H)/12));
+  floorY=H-document.getElementById('pads').offsetHeight;
+  makeWalls();
+  shapes.forEach(b=>{ if(b.position.y>floorY) Body.setPosition(b,{x:Math.min(W-20,Math.max(20,b.position.x)),y:floorY-S*2}); });
+  if(ordering) computeTargets();
+}
+
+function makeBody(kind,x,y){
+  const opts={restitution:0.45,friction:0.08,frictionAir:0.004,density:0.002};
+  let b, s=S*(0.85+Math.random()*0.5);
+  switch(kind.id){
+    case 'circulo': b=Bodies.circle(x,y,s,opts); break;
+    case 'dona': b=Bodies.circle(x,y,s*0.9,opts); break;
+    case 'luna': {
+      const pts=[]; for(let i=0;i<=18;i++){const a=Math.PI*i/18; pts.push({x:Math.cos(a)*s*1.15,y:Math.sin(a)*s*1.15});}
+      b=Bodies.fromVertices(x,y,[pts],opts); break; }
+    case 'triangulo': b=Bodies.polygon(x,y,3,s*1.1,opts); break;
+    case 'pildora': b=Bodies.rectangle(x,y,s*2.8,s*0.95,Object.assign({chamfer:{radius:s*0.47,quality:12}},opts)); break;
+    case 'cuadrado': b=Bodies.rectangle(x,y,s*1.6,s*1.6,opts); break;
+  }
+  b.plugin.kind=kind; b.plugin.note=Math.floor(Math.random()*PENTA.length); b.plugin.s=s; b.plugin.last=0; b.plugin.sc=1; b.plugin.goal=1;
+  Body.setAngle(b,(Math.random()-.5)*1.2);
+  return b;
+}
+function spawn(kind,x,y,vy){
+  const b=makeBody(kind, x ?? (S*2+Math.random()*(W-S*4)), y ?? -S*2);
+  if(vy) Body.setVelocity(b,{x:(Math.random()-.5)*4,y:vy});
+  Body.setAngularVelocity(b,(Math.random()-.5)*0.2);
+  shapes.push(b); Composite.add(world,b);
+  while(shapes.length>72){ Composite.remove(world,shapes.shift()); }
+  if(ordering && !building) computeTargets();
+  return b;
+}
+
+/* collisions -> sound */
+Events.on(engine,'collisionStart',e=>{
+  const now=performance.now();
+  for(const p of e.pairs){
+    const a=p.bodyA.parent, b=p.bodyB.parent;
+    const dvx=a.velocity.x-b.velocity.x, dvy=a.velocity.y-b.velocity.y;
+    const sp=Math.hypot(dvx,dvy);
+    if(sp<2.2) continue;
+    const src = a.plugin.wall ? b : (b.plugin.wall ? a : (a.speed>b.speed?a:b));
+    if(!src.plugin.kind || now-src.plugin.last<90) continue;
+    src.plugin.last=now; src.plugin.flash=1;
+    play(src.plugin.kind.id, src.plugin.note, sp/14);
+  }
+});
+
+/* mouse / touch drag */
+const mouse=Mouse.create(canvas);
+['mousewheel','DOMMouseScroll','wheel'].forEach(ev=>mouse.element.removeEventListener(ev,mouse.mousewheel));
+const mc=MouseConstraint.create(engine,{mouse,constraint:{stiffness:0.2,render:{visible:false}}});
+Composite.add(world,mc);
+Events.on(mc,'startdrag',e=>{ unlock(); const b=e.body.parent; if(b.plugin.kind){ b.plugin.flash=1; play(b.plugin.kind.id,b.plugin.note,0.8);} });
+Events.on(mc,'mousedown',e=>{
+  unlock();
+  const hit=Query.point(shapes,e.mouse.position);
+  if(!hit.length && !ordering){ spawn(KINDS[Math.floor(Math.random()*6)], e.mouse.position.x, Math.min(e.mouse.position.y, floorY-S*2)); }
+});
+
+/* forming: from chaos to the brand. The shapes shrink and assemble the ə, the dot is always menta circles. */
+let ordering=false, building=false; const targets=new Map();
+const EXT={circulo:1,dona:.9,luna:1.15,triangulo:1.1,pildora:1.4,cuadrado:.95};
+const FONT='"Geist","Helvetica Neue",Arial,sans-serif';
+function sample(drawFn,rw,rh,p){
+  const oc=document.createElement('canvas'); oc.width=rw; oc.height=rh;
+  const o=oc.getContext('2d'); drawFn(o);
+  const d=o.getImageData(0,0,rw,rh).data, pts=[]; let row=0;
+  for(let y=p/2;y<rh;y+=p*0.87,row++){
+    for(let x=p/2+(row%2?p/2:0);x<rw;x+=p){
+      if(d[(Math.floor(y)*rw+Math.floor(x))*4+3]>128) pts.push({x,y});
+    }
+  }
+  return pts;
+}
+function computeTargets(){
+  building=true; targets.clear();
+  const narrow=W<760;
+  const rx=narrow?S*0.5:W*0.46, rw=Math.max(80,Math.floor(narrow?W-S:W*0.54-S*0.5));
+  const ry=narrow?H*0.32:Math.max(80,H*0.1), rh=Math.max(80,Math.floor(floorY-ry-S*0.4));
+  const m0=document.createElement('canvas').getContext('2d'); m0.font='600 100px '+FONT;
+  const mm=m0.measureText('ə'); const gw=mm.width/100, gh=((mm.actualBoundingBoxAscent||55)+(mm.actualBoundingBoxDescent||2))/100;
+  const fs=Math.min(rh/gh*0.94, rw/(gw+0.32)*0.94);
+  const asc=(mm.actualBoundingBoxAscent||55)/100*fs, gH=gh*fs, dotR=fs*0.075;
+  const totalW=gw*fs+fs*0.05+dotR*2, x0=(rw-totalW)/2, base=(rh-gH)/2+asc;
+  const glyph=o=>{o.fillStyle='#000';o.font='600 '+fs+'px '+FONT;o.fillText('ə',x0,base);};
+  const dot=o=>{o.fillStyle='#000';o.beginPath();o.arc(x0+gw*fs+fs*0.05+dotR,base-dotR,dotR,0,Math.PI*2);o.fill();};
+  const want=Math.min(64,Math.max(shapes.length,34));
+  let p=150,g=[],dt=[];
+  for(;p>=12;p-=2){ g=sample(glyph,rw,rh,p); dt=sample(dot,rw,rh,p); if(g.length+dt.length>=want) break; }
+  if(!dt.length) dt=[{x:x0+gw*fs+fs*0.05+dotR,y:base-dotR}];
+  // make sure there are enough shapes, and enough menta circles for the dot
+  let circles=shapes.filter(b=>b.plugin.kind.id==='circulo');
+  while(circles.length<dt.length){ circles.push(spawn(KINDS[0],null,-S*2,6)); }
+  while(shapes.length<g.length+dt.length){ spawn(KINDS[1+Math.floor(Math.random()*5)],null,-S*2,6); }
+  const toAbs=pt=>({x:rx+pt.x,y:ry+pt.y});
+  const dotShapes=circles.slice().sort((a,b)=>b.position.x-a.position.x).slice(0,dt.length);
+  dt.map(toAbs).forEach((t,i)=>targets.set(dotShapes[i],t));
+  const rest=shapes.filter(b=>!targets.has(b)).sort((a,b)=>a.position.x-b.position.x);
+  const gt=g.map(toAbs).sort((a,b)=>a.x-b.x);
+  rest.forEach((b,i)=>{ if(i<gt.length) targets.set(b,gt[i]); });
+  shapes.forEach(b=>{
+    b.plugin.arrived=false;
+    if(targets.has(b)){ b.plugin.goal=(p*0.5)/(EXT[b.plugin.kind.id]*b.plugin.s); b.collisionFilter.group=-1; }
+    else { b.plugin.goal=0.25; b.collisionFilter.group=-1; }
+  });
+  building=false;
+}
+function setOrder(on){
+  ordering=on; engine.gravity.y = on||reduce ? 0 : 1;
+  document.getElementById('order').setAttribute('aria-pressed',on?'true':'false');
+  document.getElementById('orderTxt').textContent=on?'soltar':'formar ə';
+  document.querySelector('.copy').classList.toggle('dim',on);
+  if(on){ computeTargets(); }
+  else {
+    targets.clear();
+    shapes.forEach(b=>{ b.plugin.goal=1; Body.setVelocity(b,{x:(Math.random()-.5)*10,y:-4-Math.random()*10}); Body.setAngularVelocity(b,(Math.random()-.5)*0.3); });
+    setTimeout(()=>{ if(!ordering) shapes.forEach(b=>b.collisionFilter.group=0); },420);
+  }
+}
+Events.on(engine,'beforeUpdate',()=>{
+  for(const b of shapes){
+    const goal=b.plugin.goal||1;
+    if(Math.abs(b.plugin.sc-goal)>0.004){
+      const n=b.plugin.sc+(goal-b.plugin.sc)*0.12;
+      Body.scale(b,n/b.plugin.sc,n/b.plugin.sc); b.plugin.sc=n;
+    }
+  }
+  if(!ordering) return;
+  for(const [b,t] of targets){
+    if(mc.body && mc.body.parent===b) continue;
+    const dx=t.x-b.position.x, dy=t.y-b.position.y;
+    Body.setVelocity(b,{x:b.velocity.x*0.84+dx*0.02, y:b.velocity.y*0.84+dy*0.02});
+    let a=b.angle%(Math.PI*2); if(a>Math.PI) a-=Math.PI*2; if(a<-Math.PI) a+=Math.PI*2;
+    Body.setAngularVelocity(b,b.angularVelocity*0.8-a*0.03);
+    if(!b.plugin.arrived && dx*dx+dy*dy<36){ b.plugin.arrived=true; b.plugin.flash=1; play(b.plugin.kind.id,b.plugin.note,0.35); }
+  }
+});
+
+/* ---------- drawing ---------- */
+function path(b){ const v=b.vertices; ctx.beginPath(); ctx.moveTo(v[0].x,v[0].y); for(let i=1;i<v.length;i++) ctx.lineTo(v[i].x,v[i].y); ctx.closePath(); }
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  // op-art floor band
+  ctx.fillStyle=C('line');
+  for(let y=floorY-8; y>floorY-8-16*6; y-=16) ctx.fillRect(0,y,W,8);
+  for(const b of shapes){
+    const k=b.plugin.kind, s=b.plugin.s;
+    ctx.fillStyle=k.color; ctx.strokeStyle=k.color;
+    if(k.id==='circulo'){ ctx.beginPath(); ctx.arc(b.position.x,b.position.y,b.circleRadius,0,Math.PI*2); ctx.fill(); }
+    else if(k.id==='dona'){ ctx.beginPath(); ctx.lineWidth=b.circleRadius*0.5; ctx.arc(b.position.x,b.position.y,b.circleRadius*0.75,0,Math.PI*2); ctx.stroke(); }
+    else { path(b.parts.length>1?b.parts[0]:b); ctx.fill(); }
+    if(b.plugin.flash>0.02){
+      ctx.globalAlpha=b.plugin.flash*0.5; ctx.fillStyle=C('ink');
+      if(b.circleRadius){ ctx.beginPath(); ctx.arc(b.position.x,b.position.y,b.circleRadius*(1+(1-b.plugin.flash)*0.4),0,Math.PI*2); ctx.lineWidth=2; ctx.strokeStyle=C('ink'); ctx.stroke(); }
+      else { ctx.lineWidth=2; ctx.strokeStyle=C('ink'); path(b.parts.length>1?b.parts[0]:b); ctx.stroke(); }
+      ctx.globalAlpha=1; b.plugin.flash*=0.88;
+    }
+  }
+}
+let lastT=performance.now();
+function loop(t){
+  const dt=Math.min(32,t-lastT); lastT=t;
+  Engine.update(engine,dt);
+  draw(); requestAnimationFrame(loop);
+}
+
+/* ---------- UI ---------- */
+let unlocked=false;
+function unlock(){ if(unlocked) return; unlocked=true; setSound(true); }
+const icons={
+  circulo:'<circle cx="12" cy="12" r="10" fill="var(--menta)"/>',
+  dona:'<circle cx="12" cy="12" r="7.5" fill="none" stroke="var(--naranja)" stroke-width="5"/>',
+  luna:'<path d="M2 8 A10 10 0 0 0 22 8 Z" fill="var(--mostaza)"/>',
+  triangulo:'<path d="M4 2 L22 12 L4 22 Z" fill="var(--verde)"/>',
+  pildora:'<rect x="1" y="7" width="22" height="10" rx="5" fill="var(--rosa)"/>',
+  cuadrado:'<rect x="3" y="3" width="18" height="18" fill="var(--violeta)"/>'
+};
+const padrow=document.getElementById('padrow'), padEls={};
+KINDS.forEach(k=>{
+  const btn=document.createElement('button'); btn.type='button'; btn.className='pad';
+  btn.setAttribute('aria-label','Soltar '+k.name+' (tecla '+k.key.toUpperCase()+')');
+  btn.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[k.id]+'</svg><span class="lbl">'+k.name+'</span><kbd>'+k.key.toUpperCase()+'</kbd>';
+  btn.addEventListener('click',()=>trigger(k));
+  padrow.appendChild(btn); padEls[k.key]=btn;
+});
+function trigger(k){
+  unlock();
+  const b=spawn(k,null,-S*2,14);
+  b.plugin.flash=1; play(k.id,b.plugin.note,0.9);
+  const el=padEls[k.key]; el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'),120);
+}
+document.getElementById('sound').addEventListener('click',()=>{ unlocked=true; setSound(!soundOn); });
+document.getElementById('order').addEventListener('click',()=>{ unlock(); setOrder(!ordering); });
+window.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey||e.repeat) return;
+  if(e.target.closest && e.target.closest('button') && (e.key===' '||e.key==='Enter')) return;
+  const k=KINDS.find(k=>k.key===e.key.toLowerCase());
+  if(k){ e.preventDefault(); trigger(k); }
+  else if(e.key===' '){ e.preventDefault(); unlock(); setOrder(!ordering); }
+});
+window.addEventListener('resize',resize);
+
+/* ---------- start ---------- */
+try{ document.fonts && document.fonts.load('600 100px Geist'); }catch(e){}
+resize();
+const startCount = W<600 ? 14 : 22;
+for(let i=0;i<startCount;i++){
+  const k=KINDS[i%6];
+  const b=spawn(k, S*2+Math.random()*(W-S*4), reduce ? floorY-S*2-Math.random()*H*0.3 : -S*2 - i*S*1.6);
+}
+if(reduce) setOrder(true);
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
