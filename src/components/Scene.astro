@@ -8,11 +8,15 @@ import Pads from './Pads.astro';
 
 <script>
   import { initFormas } from '../scripts/formas.js';
-  initFormas({
+  import { initCursor, initReveal, initMagnetic } from '../scripts/motion.js';
+  const scene = initFormas({
     canvas: document.getElementById('c') as HTMLCanvasElement,
     soundButton: document.getElementById('sound'),
     soundLabel: document.getElementById('soundTxt'),
     pads: document.getElementById('pads'),
     loader: document.getElementById('loader'),
   });
+  initCursor(scene);
+  initReveal();
+  initMagnetic();
 </script>

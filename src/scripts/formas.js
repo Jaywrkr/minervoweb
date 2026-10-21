@@ -366,6 +366,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       setTimeout(() => {
         loader.classList.add('is-done');
         setMode(null); // se rompe: estallido y gravedad
+        window.dispatchEvent(new CustomEvent('mnv:intro'));
         try { sessionStorage.setItem('mnv-intro', '1'); } catch (e) {}
         setTimeout(() => {
           document.documentElement.classList.remove('is-loading');
@@ -376,6 +377,7 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     });
   } else {
     loaderEl?.remove();
+    window.dispatchEvent(new CustomEvent('mnv:intro'));
     for (let i = 0; i < n; i++) {
       spawn(KINDS[i % 6], S * 2 + Math.random() * Math.max(1, W - S * 4),
         reduce ? H * 0.6 - Math.random() * H * 0.4 : -S * 2 - i * S * 1.4, reduce ? 0 : 4);
@@ -392,4 +394,13 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     draw();
     requestAnimationFrame(loop);
   })();
+
+  // API para otros módulos (cursor): qué forma hay bajo un punto y si se está arrastrando una.
+  return {
+    shapeAt(x, y) {
+      const hit = Query.point(shapes, { x, y })[0];
+      return hit ? hit.parent.plugin.color : null;
+    },
+    get dragging() { return !!(mc && mc.body); },
+  };
 }
