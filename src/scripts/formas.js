@@ -150,9 +150,11 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     } else if (type === 'frame') {
       const el = sec.querySelector('[data-anchor]');
       const r = el.getBoundingClientRect();
-      const want = Math.max(24, Math.min(64, Math.round((2 * (r.width + r.height)) / (S * 1.9))));
+      const want = W >= 700
+        ? Math.max(24, Math.min(64, Math.round((2 * (r.width + r.height)) / (S * 1.9))))
+        : Math.max(12, Math.min(24, Math.round((2 * r.width) / (S * 1.7))));
       while (shapes.length < want) spawn(KINDS[Math.floor(Math.random() * 6)]);
-      const { pts, p } = framePoints(r.width, r.height, Math.min(want, shapes.length));
+      const { pts, p } = framePoints(r.width, r.height, Math.min(want, shapes.length), W >= 700);
       // cada forma va al punto del borde más cercano en orden angular, para que no se crucen
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       const ang = (x, y) => Math.atan2(y, x);
