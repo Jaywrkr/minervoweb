@@ -14,7 +14,8 @@ const { Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Query }
 const ALL = 0xffffffff;
 const MAX_SHAPES = 110;
 
-export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl, render3d = null }) {
+export function initFormas({ canvas, soundButton, soundLabel, pads, loader: loaderEl, render3d: r3d = null }) {
+  let render3d = r3d;
   const css = getComputedStyle(document.documentElement);
   const color = (token) => css.getPropertyValue('--' + token).trim();
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -454,6 +455,14 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
       return hit ? hit.parent.plugin.color : null;
     },
     get dragging() { return !!(mc && mc.body); },
+    // Conecta el render 3D cuando termina de cargar: la escena arranca en 2D y pasa a 3D sin reiniciarse.
+    attach3D(r) {
+      if (render3d || !r) return;
+      canvas.after(r.el);
+      r.resize(W, H);
+      render3d = r;
+      document.documentElement.classList.add('is-3d');
+    },
     // Remezcla la formación actual (solo la ə): las piezas cambian de lugar sonando al llegar.
     remix() {
       if (modeType !== 'glyph' || !modeSec) return false;
