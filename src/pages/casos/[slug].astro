@@ -20,7 +20,7 @@ const num = String(i + 1).padStart(2, '0');
 <Base title={`${c.client} — minərvo.studio`} description={t.summary}>
   <Nav />
   <main id="contenido" class="case-page">
-    <section class="case-hero" data-mode="frame">
+    <section class="case-hero" data-mode="frame" data-music="2">
       <div class="wrap">
         <div class="case-head">
           <a class="mono back" href="/#trabajo">← trabajo</a>
@@ -41,7 +41,7 @@ const num = String(i + 1).padStart(2, '0');
       </div>
     </section>
 
-    <section class="sec case-body" data-mode="chaos">
+    <section class="sec case-body" data-mode="chaos" data-music="2">
       <div class="wrap">
         <div class="case-grid">
           <div class="case-block"><span class="mono eyebrow">reto</span><p>{t.challenge}</p></div>
@@ -58,7 +58,7 @@ const num = String(i + 1).padStart(2, '0');
       </div>
     </section>
 
-    <section class="next" data-mode="chaos">
+    <section class="next" data-mode="chaos" data-music="2">
       <div class="wrap">
         <a class="next-link" href={`/casos/${next.slug}/`} style={`--next:var(--${next.bg})`}>
           <span class="mono eyebrow">siguiente caso</span>

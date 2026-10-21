@@ -159,6 +159,8 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
     building = true;
     const type = sec ? sec.dataset.mode : 'chaos';
     const prevType = modeType;
+    // cada sección pide su nivel de música (data-music: 0 silencio · 1 tranquilo · 2 medio · 3 intenso)
+    if (sec?.dataset?.music !== undefined) audio.setMusic(sec.dataset.music);
     assign.clear();
 
     if (type === 'glyph') {

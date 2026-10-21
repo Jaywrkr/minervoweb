@@ -197,7 +197,7 @@ const PATTERNS = {
 };
 export function initInstruments(scene) {
   if (!scene) return;
-  const STEP = 140; // ms por paso (~107 bpm en corcheas)
+  const STEP = 156; // ms por paso: semicorcheas a 96 bpm, el mismo tempo de la música
   document.querySelectorAll('[data-instrument]').forEach((card) => {
     const kind = card.dataset.instrument, pat = PATTERNS[kind];
     if (!pat) return;
