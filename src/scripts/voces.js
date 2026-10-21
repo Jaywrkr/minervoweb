@@ -2,29 +2,32 @@
 // escribiría cada marca. minərvo es el texto por defecto (lo renderiza el HTML).
 export const VOICES = {
   minervo: {
-    kicker: 'estudio de sistemas de marca · cuenca',
-    h1: 'Diseñamos sistemas, no páginas.', hl: 1,
-    lead: 'Identidad, web, motion y experiencias que funcionan como un solo sistema. Gira los diales: esta página también es uno.',
-    cta: 'hablemos ↗',
-    nav: ['trabajo', 'servicios', 'estudio', 'contacto'],
+    status: 'Agenda abierta · 2027',
+    kicker: 'Estudio de sistemas de marca — Cuenca, Ecuador',
+    h1: 'Diseñamos sistemas de marca que funcionan en cualquier medio.', hl: -1,
+    lead: 'Identidad, web, motion y experiencias construidas como un solo sistema. Esta página también lo es: ajústala desde el panel o pruébala con otra marca.',
+    cta: 'Iniciar un proyecto →',
+    nav: ['Trabajo', 'Servicios', 'Estudio', 'Contacto'],
     nums: ['01', '02', '03', '04'],
-    ticker: ['identidad viva', 'web y producto', 'motion', 'experiencias', 'código a medida', 'sistemas de marca'], sep: '✦',
+    secServices: 'Servicios', secWork: 'Trabajo seleccionado',
+    ticker: ['Estrategia de marca', 'Identidad visual', 'Diseño web', 'Desarrollo', 'Motion', 'Experiencias'], sep: '/',
     services: [
-      { t: 'Identidad viva', d: 'Marcas que se comportan, no solo se ven.', l: ['Estrategia y nombre', 'Sistema visual', 'Guías que se usan'] },
+      { t: 'Identidad viva', d: 'Marcas que se comportan, no solo se ven.', l: ['Estrategia y nombre', 'Sistema visual', 'Guías de uso'] },
       { t: 'Web y producto', d: 'Diseño y código en el mismo equipo.', l: ['Sitios a medida', 'Producto digital', 'WebGL y 3D'] },
-      { t: 'Motion', d: 'Sistemas que se mueven con intención.', l: ['Animación de marca', 'Video y redes', 'Interfaces vivas'] },
-      { t: 'Experiencias', d: 'Instalaciones, eventos y lo que aún no tiene nombre.', l: ['Activaciones', 'Instalaciones', 'Lanzamientos'] },
+      { t: 'Motion', d: 'Sistemas que se mueven con intención.', l: ['Animación de marca', 'Video y redes', 'Interfaces'] },
+      { t: 'Experiencias', d: 'Instalaciones, eventos y lanzamientos.', l: ['Activaciones', 'Instalaciones', 'Lanzamientos'] },
     ],
     work: [
-      { t: 'Caso uno', m: '2026 · identidad · web' },
-      { t: 'Caso dos', m: '2025 · motion · producto' },
-      { t: 'Caso tres', m: '2025 · experiencia' },
+      { t: 'Proyecto 01', m: '2026 — Identidad, web' },
+      { t: 'Proyecto 02', m: '2025 — Motion, producto' },
+      { t: 'Proyecto 03', m: '2025 — Experiencia' },
     ],
     art: [],
   },
 
   // Coresolutions: formal, técnico, B2B. Datos siempre en mono. Retícula de línea fina.
   coresolutions: {
+    status: 'Operación 24/7', secServices: 'Soluciones', secWork: 'Portafolio',
     kicker: 'SISTEMAS DE MARCA — CUENCA, EC',
     h1: 'Infraestructura para marcas que necesitan escalar.', hl: 2,
     lead: 'Diseñamos, implementamos y mantenemos sistemas de marca con la disciplina de una arquitectura crítica: documentados, medibles y siempre disponibles.',
@@ -48,6 +51,7 @@ export const VOICES = {
 
   // Jay Jaramillo: directo, en minúsculas, sin relleno. Siempre termina en "simple."
   jay: {
+    status: 'disponible', secServices: 'qué hacemos', secWork: 'trabajo',
     kicker: 'minərvo — diseño, código, movimiento',
     h1: 'hacemos marcas que funcionan. simple.', hl: 4,
     lead: 'sin relleno. sin promesas. diseño que se entiende a la primera.',
@@ -71,6 +75,7 @@ export const VOICES = {
 
   // ANKLA: cercana, en "tú", honesta con el fallo, sin gurús. Titular fino que remata en negrita.
   ankla: {
+    status: 'DÍA 1 EMPIEZA HOY', secServices: 'El sistema', secWork: 'Trabajo',
     kicker: 'SISTEMA GUIADO DE MARCA SOSTENIBLE',
     h1: 'No es diseño bonito. Es un sistema al que tu marca puede volver.', hl: -1, boldFrom: 4,
     lead: 'Basado en lo esencial: el 20% de las decisiones hace el 80% de tu marca. Menos piezas. Más continuidad. Sin gurús.',
@@ -94,6 +99,7 @@ export const VOICES = {
 
   // A Todo Terreno: aventura, misterio, expedición. Titulares en mayúsculas, sellos y pasaporte.
   todoterreno: {
+    status: 'CONVOY EN RUTA', secServices: 'Equipo de expedición', secWork: 'Bitácora',
     kicker: 'DOCUMENTO DE EXPEDICIÓN · N.º AT26-000000',
     h1: 'Nadie sabe a dónde va tu marca. Todavía.', hl: 7,
     lead: 'Subes sin saber a dónde te llevamos. Bajas entendiendo por qué. Diseño, código y movimiento para marcas que no fallan a las 6 AM, bajo la lluvia.',

@@ -82,8 +82,8 @@ export function initVida(root) {
     art.addEventListener('pointerleave', () => comp.querySelectorAll('.sh').forEach((s) => (s.style.translate = '0px 0px')));
   }
 
-  /* ---------- cursor por marca ---------- */
-  if (fine && !reduce) {
+  /* ---------- cursor por marca (desactivado en la versión profesional) ---------- */
+  if (false) {
     const cur = document.createElement('div');
     cur.className = 'dl-cur';
     cur.innerHTML = '<span class="dl-cur-lbl"></span>';

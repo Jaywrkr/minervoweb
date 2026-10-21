@@ -7,10 +7,10 @@ import { VOICES } from './voces.js';
 import { initVida } from './vida.js';
 
 const DIALS = [
-  { id: 'e', name: 'escala' },
-  { id: 'r', name: 'ritmo' },
-  { id: 'c', name: 'contraste' },
-  { id: 'k', name: 'caos' },
+  { id: 'e', name: 'Escala', hint: 'Tamaño de la tipografía y los elementos' },
+  { id: 'r', name: 'Densidad', hint: 'Retícula, espaciado y ritmo' },
+  { id: 'c', name: 'Contraste', hint: 'Color de los bloques y peso del texto' },
+  { id: 'k', name: 'Tensión', hint: 'Cuánto se sale el sistema de su retícula' },
 ];
 
 // Marcas. Además de minərvo, dos marcas reales de Jay para probar "vestir": Coresolutions (tokens de su
@@ -20,11 +20,11 @@ const DIALS = [
 const BRANDS = {
   // minərvo fresco: crema, bloques de color y display grueso
   minervo: {
-    name: 'minərvo', g: '#f4ebe1', t: '#0b0b0d', ink: ['#0b0b0d', '#fffaf3'], paper: '#fffaf3',
-    p: ['#5fe3a1', '#ff5b2e', '#ffb800', '#1fbf5f', '#ff9ec7', '#9b7bff'],
-    font: '"Geist",system-ui,sans-serif', hfont: '"Bricolage","Geist",sans-serif', case: 'none', radius: 32,
+    name: 'minərvo', g: '#f3f2ef', t: '#121212', ink: ['#121212', '#f3f2ef'], paper: '#f3f2ef',
+    p: ['#5fe3a1', '#ff5b2e', '#ffb800', '#1fbf5f', '#ff9ec7', '#151515'],
+    font: '"Geist",system-ui,sans-serif', hfont: '"Geist",system-ui,sans-serif', case: 'none', radius: 4,
     shapes: ['circulo', 'dona', 'luna', 'triangulo', 'pildora', 'cuadrado'],
-    rules: { wmax: 800, angles: true, density: 1, border: 0, mono: false },
+    rules: { wmax: 560, angles: true, density: 1, border: 0, mono: false, fills: false },
   },
   // Coresolutions: navy #01095c, rampa de azules, IBM Plex Sans 600 como máximo, esquinas a 0
   coresolutions: {
@@ -255,60 +255,26 @@ export function initDiales(root) {
       labels.map((t, j) => { const q = pts[Math.min(pts.length - 1, j * step2)]; return `<text x="${(q[0] + 26).toFixed(0)}" y="${(q[1] - 26).toFixed(0)}" font-family="Geist Mono, monospace" font-size="22" fill="currentColor">${t}</text>`; }).join('');
   }
 
-  /* ---------- diales ---------- */
+  /* ---------- parámetros: deslizadores accesibles ---------- */
   const knobsEl = root.querySelector('#knobs');
   const knobs = {};
   DIALS.forEach((d) => {
     const el = document.createElement('div');
-    el.className = 'knob';
-    el.tabIndex = 0;
-    el.setAttribute('role', 'slider');
-    el.setAttribute('aria-label', d.name);
-    el.setAttribute('aria-valuemin', '0');
-    el.setAttribute('aria-valuemax', '100');
-    el.innerHTML = `
-      <svg viewBox="0 0 60 60" aria-hidden="true">
-        <circle cx="30" cy="30" r="26" fill="none" stroke="#2a2a2e" stroke-width="3"
-          stroke-dasharray="122.5 200" transform="rotate(135 30 30)" stroke-linecap="round"/>
-        <circle class="arc" cx="30" cy="30" r="26" fill="none" stroke="#8edcb2" stroke-width="3"
-          stroke-dasharray="0 200" transform="rotate(135 30 30)" stroke-linecap="round"/>
-        <g class="cap"><circle cx="30" cy="30" r="19" fill="#1c1c21" stroke="#3a3a40"/>
-          <rect x="28.5" y="13" width="3" height="10" rx="1.5" fill="#f3f0e8"/></g>
-      </svg>
-      <span class="mono">${d.name}</span><span class="mono val">50</span>`;
+    el.className = 'in-p';
+    el.innerHTML = `<label for="p-${d.id}">${d.name}</label><output for="p-${d.id}">50</output>
+      <input id="p-${d.id}" type="range" min="0" max="100" step="1" value="50" aria-describedby="h-${d.id}">
+      <small id="h-${d.id}">${d.hint}</small>`;
     knobsEl.appendChild(el);
     knobs[d.id] = el;
-
-    // arrastre: vertical u horizontal, como una perilla de consola
-    let start = null;
-    el.addEventListener('pointerdown', (ev) => {
-      el.setPointerCapture(ev.pointerId);
-      start = { x: ev.clientX, y: ev.clientY, v: state[d.id] };
-      el.focus({ preventScroll: true });
-    });
-    el.addEventListener('pointermove', (ev) => {
-      if (!start) return;
-      const delta = ((ev.clientX - start.x) - (ev.clientY - start.y)) / 220;
-      set(d.id, start.v + delta);
-    });
-    const end = () => { if (start) { start = null; commit(); } };
-    el.addEventListener('pointerup', end);
-    el.addEventListener('pointercancel', end);
-    el.addEventListener('wheel', (ev) => { ev.preventDefault(); set(d.id, state[d.id] - ev.deltaY / 800); commitSoon(); }, { passive: false });
-    el.addEventListener('keydown', (ev) => {
-      const step = { ArrowUp: 0.02, ArrowRight: 0.02, ArrowDown: -0.02, ArrowLeft: -0.02, PageUp: 0.1, PageDown: -0.1 }[ev.key];
-      if (step != null) { ev.preventDefault(); set(d.id, state[d.id] + step); commitSoon(); }
-      else if (ev.key === 'Home') { ev.preventDefault(); set(d.id, 0); commitSoon(); }
-      else if (ev.key === 'End') { ev.preventDefault(); set(d.id, 1); commitSoon(); }
-    });
+    const input = el.querySelector('input');
+    input.addEventListener('input', () => { set(d.id, input.value / 100); commitSoon(); });
   });
 
   function drawKnob(id) {
-    const el = knobs[id], v = state[id], pct = Math.round(v * 100);
-    el.setAttribute('aria-valuenow', String(pct));
-    el.querySelector('.val').textContent = String(pct).padStart(2, '0');
-    el.querySelector('.arc').setAttribute('stroke-dasharray', `${(v * 122.5).toFixed(1)} 200`);
-    el.querySelector('.cap').setAttribute('transform', `rotate(${(-135 + v * 270).toFixed(1)} 30 30)`);
+    const el = knobs[id], pct = Math.round(state[id] * 100), input = el.querySelector('input');
+    if (Number(input.value) !== pct) input.value = String(pct);
+    input.style.setProperty('--v', pct + '%');
+    el.querySelector('output').textContent = String(pct);
   }
 
   /* ---------- aplicar ---------- */
@@ -335,17 +301,36 @@ export function initDiales(root) {
     // cada bloque elige su tinta según su fondo real
     root.querySelectorAll('[data-cc]').forEach((el) => {
       const key = el.dataset.cc, solid = el.hasAttribute('data-solid');
-      const bg = key === 'paper' ? B.paper : B.p[Number(key.slice(1))];
+      const flat = B.rules.fills === false && el.hasAttribute('data-fillable');
+      const bg = key === 'paper' || flat ? B.paper : B.p[Number(key.slice(1))];
       el.style.setProperty('--ci', inkFor(bg, B.paper, solid ? 1 : state.c, B.ink));
     });
     root.dataset.brand = state.b;
+    root.dataset.fills = B.rules.fills === false ? 'off' : 'on';
     root.querySelector('#wear').textContent = state.b === 'minervo' ? '' : '× ' + B.name;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', B.g);
     buildShapes();
     layoutShapes();
-    const ed = 'edición nº ' + String(edition()).padStart(4, '0');
-    root.querySelector('#edTop').textContent = ed;
-    root.querySelectorAll('[data-brand].dl-btn').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.brand === state.b)));
+    const n = String(edition()).padStart(4, '0');
+    root.querySelector('#edTop').textContent = 'Edición ' + n;
+    root.querySelector('#figcap').textContent = `Fig. 01 — Sistema de formas · ${B.name} · edición ${n}`;
+    // tokens activos, tal como los está usando la página
+    const fam = (f) => f.replace('var(--poster)', 'Anton').split(',')[0].replace(/"/g, '').replace(' Var', '');
+    const wNow = Math.round(Math.min(420 + state.c * 380, B.rules.wmax));
+    const tk = (id, v) => { const el = root.querySelector('#' + id); if (el) el.textContent = v; };
+    tk('tkBg', B.g.toUpperCase()); tk('tkInk', B.t.toUpperCase());
+    root.querySelector('#tkBgSw').style.background = B.g; root.querySelector('#tkInkSw').style.background = B.t;
+    tk('tkFont', fam(B.hfont)); tk('tkW', String(wNow) + (B.rules.wmax < 800 ? ` · máx. ${B.rules.wmax}` : ''));
+    tk('tkRad', B.radius + ' px');
+    const rl = [];
+    if (!B.rules.angles) rl.push('sin ángulos');
+    if (B.rules.snap) rl.push('ajuste a retícula');
+    if (B.rules.density < 1) rl.push('espacio vacío');
+    if (B.rules.radar) rl.push('radar');
+    if (B.rules.route) rl.push('mapa de ruta');
+    if (B.rules.fills === false) rl.push('color solo en figura');
+    tk('tkRules', rl.join(' · ') || 'libre');
+    root.querySelectorAll('.dl-btn[data-brand]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.brand === state.b)));
   }
 
   // número de edición: hash de la combinación (redondeada a lo que se puede elegir con los diales)
@@ -391,11 +376,30 @@ export function initDiales(root) {
     commitSoon();
   });
 
-  /* ---------- guardar edición: póster PNG + enlace ---------- */
+  /* ---------- copiar enlace ---------- */
+  const copyBtn = root.querySelector('#copy');
+  copyBtn.addEventListener('click', async () => {
+    commit();
+    let ok = false;
+    try { await navigator.clipboard.writeText(location.href); ok = true; } catch (e) {}
+    copyBtn.textContent = ok ? 'Enlace copiado' : location.hash;
+    root.querySelector('#live').textContent = ok ? 'Enlace copiado.' : 'Copia el código ' + location.hash;
+    setTimeout(() => (copyBtn.textContent = 'Copiar enlace'), 2200);
+  });
+
+  /* ---------- panel en móvil ---------- */
+  const con = root.querySelector('#console'), tog = root.querySelector('#conToggle');
+  tog.addEventListener('click', () => {
+    if (matchMedia('(min-width: 1100px)').matches) return;
+    const open = !con.classList.contains('is-open');
+    con.classList.toggle('is-open', open);
+    tog.setAttribute('aria-expanded', String(open));
+  });
+
+  /* ---------- exportar póster PNG ---------- */
   root.querySelector('#save').addEventListener('click', async () => {
     commit();
     const B = BRANDS[state.b], n = String(edition()).padStart(4, '0');
-    try { await navigator.clipboard?.writeText(location.href); } catch (e) {}
     const cv = document.createElement('canvas');
     cv.width = 1200; cv.height = 1500;
     const ctx = cv.getContext('2d');
@@ -421,7 +425,7 @@ export function initDiales(root) {
     ctx.fillStyle = B.t;
     ctx.font = '500 44px Geist, sans-serif';
     ctx.fillText(state.b === 'minervo' ? 'minərvo.studio' : 'minərvo × ' + B.name, 60, 110);
-    ctx.font = '800 180px Bricolage, Geist, sans-serif';
+    ctx.font = '500 180px Geist, sans-serif';
     ctx.fillText('Nº ' + n, 52, 320);
     ctx.font = '500 26px "Geist Mono", monospace';
     ctx.fillText(DIALS.map((d) => d.name + ' ' + Math.round(state[d.id] * 100)).join('  ·  ').toUpperCase(), 60, 1420);
@@ -429,10 +433,10 @@ export function initDiales(root) {
     a.download = `minervo-edicion-${n}.png`;
     a.href = cv.toDataURL('image/png');
     a.click();
-    root.querySelector('#live').textContent = `Edición nº ${n} guardada. Enlace copiado.`;
+    root.querySelector('#live').textContent = `Póster de la edición ${n} exportado.`;
     const btn = root.querySelector('#save');
-    btn.textContent = `nº ${n} · enlace copiado`;
-    setTimeout(() => (btn.textContent = 'guardar edición'), 2200);
+    btn.textContent = `Póster ${n} exportado`;
+    setTimeout(() => (btn.textContent = 'Exportar póster'), 2200);
   });
 
   DIALS.forEach((d) => drawKnob(d.id));
