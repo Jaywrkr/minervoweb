@@ -1,4 +1,6 @@
-// Pulido de movimiento: cursor propio, titulares que entran con el scroll y botones magnéticos.
+// Pulido de movimiento: scroll suave, cursor propio, titulares que entran con el scroll,
+// manifiesto que se ilumina con el scroll y botones magnéticos.
+import Lenis from 'lenis';
 // Todo se desactiva con movimiento reducido; el cursor y lo magnético solo con mouse.
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,7 +52,7 @@ export function initCursor(scene) {
 // Sin JS o con movimiento reducido, los titulares se ven normales.
 export function initReveal() {
   if (reduce() || !('IntersectionObserver' in window)) return;
-  const heads = [...document.querySelectorAll('main h1, main h2, .manif p')];
+  const heads = [...document.querySelectorAll('main h1, main h2')];
   heads.forEach((h) => {
     const text = h.textContent.replace(/\s+/g, ' ').trim();
     split(h);
@@ -117,5 +119,60 @@ export function initMagnetic() {
       el.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
     });
     el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+  });
+}
+
+/* ---------- scroll suave ---------- */
+// Lenis suaviza la rueda del mouse; los links internos (#seccion) también se desplazan suave.
+export function initSmoothScroll() {
+  if (reduce()) return null;
+  const lenis = new Lenis({ lerp: 0.11, smoothWheel: true });
+  (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(performance.now());
+
+  // mientras corre el loader no se puede hacer scroll
+  if (document.documentElement.classList.contains('is-loading')) {
+    lenis.stop();
+    window.addEventListener('mnv:intro', () => lenis.start(), { once: true });
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href*="#"]');
+    if (!a) return;
+    const url = new URL(a.href, location.href);
+    if (url.pathname !== location.pathname || !url.hash) return;
+    const target = document.querySelector(decodeURIComponent(url.hash));
+    if (!target) return;
+    e.preventDefault();
+    lenis.scrollTo(target, { duration: 1.2 });
+    history.replaceState(null, '', url.hash);
+  });
+  return lenis;
+}
+
+/* ---------- manifiesto atado al scroll ---------- */
+// Las palabras se encienden una a una según avanza el scroll por la sección.
+export function initScrub() {
+  if (reduce()) return;
+  document.querySelectorAll('[data-scrub]').forEach((el) => {
+    const text = el.textContent.replace(/\s+/g, ' ').trim();
+    split(el);
+    const sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = text;
+    el.appendChild(sr);
+    el.classList.add('scrub');
+    const words = [...el.querySelectorAll('.w > span')];
+    words.forEach((w) => (w.style.transitionDelay = '0ms'));
+    let last = -1;
+    const update = () => {
+      const r = el.getBoundingClientRect(), vh = innerHeight;
+      const prog = Math.max(0, Math.min(1, (vh * 0.85 - r.top) / (r.height + vh * 0.35)));
+      const lit = Math.round(prog * words.length);
+      if (lit !== last) {
+        words.forEach((w, i) => w.classList.toggle('lit', i < lit));
+        last = lit;
+      }
+    };
+    window.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+    update();
   });
 }
