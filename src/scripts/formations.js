@@ -72,3 +72,24 @@ export function stripePoints(rw, rh, n, rows = 3) {
   }
   return { pts, p };
 }
+
+// Puntos alrededor del borde de un rectángulo, por fuera, para enmarcar un video o imagen.
+// Devuelve coordenadas locales al rectángulo (pueden ser negativas).
+export function framePoints(rw, rh, n) {
+  const L = 2 * (rw + rh);
+  const step = L / n;
+  const p = Math.min(step, 64);
+  const pad = p * 0.55 + 6;
+  const W = rw + pad * 2, H = rh + pad * 2, P = 2 * (W + H);
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    let d = ((i + 0.5) / n) * P;
+    let x, y;
+    if (d < W) { x = d; y = 0; }
+    else if ((d -= W) < H) { x = W; y = d; }
+    else if ((d -= H) < W) { x = W - d; y = H; }
+    else { d -= W; x = 0; y = H - d; }
+    pts.push({ x: x - pad, y: y - pad });
+  }
+  return { pts, p };
+}

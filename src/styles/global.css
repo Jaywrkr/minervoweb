@@ -130,3 +130,34 @@ html.is-loading canvas#c{z-index:7}
 html.is-loading body{overflow:hidden}
 @keyframes loaderOut{to{opacity:0;visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.loader{display:none}}
+
+/* transiciones entre páginas (Chrome, Edge, Safari 18.2+; el resto navega normal) */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}
+
+/* página de caso */
+.case-hero{padding-top:clamp(112px,12vw,150px);padding-bottom:clamp(64px,8vw,104px)}
+.case-head{display:flex;flex-direction:column;gap:18px;max-width:900px;margin-bottom:clamp(56px,7vw,88px)}
+.back{color:var(--muted);text-decoration:none;align-self:flex-start;min-height:32px;display:inline-flex;align-items:center}
+.back:hover{color:var(--ink)}
+.case-head h1{margin:0;font-size:clamp(48px,8vw,120px);line-height:.92;font-weight:600;letter-spacing:-.05em;text-wrap:balance}
+.lead{margin:0;font-size:20px;line-height:30px;color:#c9c6ce;max-width:34em}
+.case-media{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;display:flex;align-items:flex-end;padding:16px;pointer-events:auto}
+.case-media b{position:absolute;display:block}
+.case-media .tag{position:relative;background:var(--ground);color:var(--ink);padding:6px 10px;border-radius:999px}
+.case-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.case-body{background:var(--ground)}
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:40px;padding-bottom:64px;border-bottom:1px solid var(--rule)}
+.case-block{display:flex;flex-direction:column;gap:12px;min-width:0}
+.case-block p{margin:0;font-size:19px;line-height:29px}
+.case-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:24px;margin:40px 0 0}
+.case-facts div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.case-facts dt{color:var(--muted)}
+.case-facts dd{margin:0;font-size:16px}
+.next{padding-block:clamp(64px,8vw,104px)}
+.next-link{display:flex;flex-direction:column;gap:12px;padding:clamp(28px,4vw,48px);border-radius:12px;background:var(--raised);text-decoration:none;border-left:0;position:relative;overflow:hidden}
+.next-link::after{content:"";position:absolute;right:clamp(20px,4vw,48px);top:50%;width:clamp(64px,10vw,140px);aspect-ratio:1;border-radius:999px;background:var(--next);transform:translateY(-50%) scale(.85);transition:transform .4s ease}
+.next-link:hover::after{transform:translateY(-50%) scale(1)}
+.next-link strong{font-size:clamp(36px,5vw,72px);line-height:.95;font-weight:600;letter-spacing:-.04em;max-width:75%}
+.next-link .mono{color:var(--muted)}

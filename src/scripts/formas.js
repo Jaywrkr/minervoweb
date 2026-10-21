@@ -3,11 +3,12 @@
 //   glyph   → arman la ə dentro de [data-anchor]
 //   slots   → cada [data-slot="<forma>"] recibe las formas de su tipo
 //   stripes → filas op-art dentro de [data-anchor]
+//   frame   → enmarcan [data-anchor] por fuera (video de un caso)
 //   chaos   → caen con gravedad
 import Matter from 'matter-js';
 import { createAudio, PENTA } from './audio.js';
 import { KINDS, kindOf, EXTENT } from './kinds.js';
-import { glyphPoints, gridPoints, stripePoints } from './formations.js';
+import { glyphPoints, gridPoints, stripePoints, framePoints } from './formations.js';
 
 const { Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Query } = Matter;
 const ALL = 0xffffffff;
@@ -146,6 +147,18 @@ export function initFormas({ canvas, soundButton, soundLabel, pads, loader: load
         const { pts, p } = gridPoints(r.width * 0.7, r.height, bs.length);
         bs.sort(byX).forEach((b, i) => setTarget(b, el, pts[i].x, pts[i].y, p));
       });
+    } else if (type === 'frame') {
+      const el = sec.querySelector('[data-anchor]');
+      const r = el.getBoundingClientRect();
+      const want = Math.max(24, Math.min(64, Math.round((2 * (r.width + r.height)) / (S * 1.9))));
+      while (shapes.length < want) spawn(KINDS[Math.floor(Math.random() * 6)]);
+      const { pts, p } = framePoints(r.width, r.height, Math.min(want, shapes.length));
+      // cada forma va al punto del borde más cercano en orden angular, para que no se crucen
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const ang = (x, y) => Math.atan2(y, x);
+      const list = shapes.slice().sort((a, b) => ang(a.position.x - cx, a.position.y - cy) - ang(b.position.x - cx, b.position.y - cy));
+      const targets = pts.map((q) => ({ ...q, a: ang(q.x - r.width / 2, q.y - r.height / 2) })).sort((a, b) => a.a - b.a);
+      list.forEach((b, i) => { if (i < targets.length) setTarget(b, el, targets[i].x, targets[i].y, p); });
     } else if (type === 'stripes') {
       const el = sec.querySelector('[data-anchor]');
       const r = el.getBoundingClientRect();
