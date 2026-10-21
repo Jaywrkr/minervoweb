@@ -1,6 +1,8 @@
 // Prototipo F1: las seis formas como objetos 3D (Three.js) con física (cannon-es) y sonido.
 // Escena 2.5D: las formas viven entre una pared trasera y una frontal invisible, frente a la cámara.
-import * as THREE from 'three';
+import {
+  ACESFilmicToneMapping, BoxGeometry, CapsuleGeometry, Color, CylinderGeometry, DirectionalLight, ExtrudeGeometry, HemisphereLight, MathUtils, Mesh, MeshPhysicalMaterial, MeshStandardMaterial, PCFSoftShadowMap, PerspectiveCamera, Plane, PlaneGeometry, Raycaster, SRGBColorSpace, Scene, Shape, SphereGeometry, TorusGeometry, Vector2, Vector3, WebGLRenderer,
+} from 'three';
 import * as CANNON from 'cannon-es';
 import { createAudio, PENTA } from './audio.js';
 import { KINDS } from './kinds.js';
@@ -14,41 +16,41 @@ export function initLab({ mount, ui }) {
   const mobile = matchMedia('(pointer: coarse)').matches;
 
   /* ---------- render ---------- */
-  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.outputColorSpace = SRGBColorSpace;
   mount.appendChild(renderer.domElement);
 
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(color('ground'));
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
+  const scene = new Scene();
+  scene.background = new Color(color('ground'));
+  const camera = new PerspectiveCamera(28, 1, 0.1, 200);
   camera.position.set(0, 0.6, 40);
   camera.lookAt(0, 0, 0);
 
   // luz: principal rasante desde arriba a la izquierda, relleno frío muy bajo
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1a22, 0.55));
-  const key = new THREE.DirectionalLight(0xfff4e8, 2.6);
+  scene.add(new HemisphereLight(0xffffff, 0x1a1a22, 0.55));
+  const key = new DirectionalLight(0xfff4e8, 2.6);
   key.position.set(-10, 16, 14);
   key.castShadow = true;
   key.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
   key.shadow.radius = 6;
   key.shadow.bias = -0.0004;
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0x9fb4ff, 0.35);
+  const fill = new DirectionalLight(0x9fb4ff, 0.35);
   fill.position.set(12, -4, 10);
   scene.add(fill);
 
   // pared trasera y piso que reciben sombra
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 1, metalness: 0 });
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(400, 200), wallMat);
+  const wallMat = new MeshStandardMaterial({ color: 0x111115, roughness: 1, metalness: 0 });
+  const wall = new Mesh(new PlaneGeometry(400, 200), wallMat);
   wall.position.z = -DEPTH - 0.02;
   wall.receiveShadow = true;
   scene.add(wall);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 40), wallMat);
+  const floor = new Mesh(new PlaneGeometry(400, 40), wallMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
@@ -76,7 +78,7 @@ export function initLab({ mount, ui }) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    viewH = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    viewH = 2 * camera.position.z * Math.tan(MathUtils.degToRad(camera.fov / 2));
     viewW = viewH * camera.aspect;
     walls.forEach((b) => world.removeBody(b));
     walls.length = 0;
@@ -96,8 +98,8 @@ export function initLab({ mount, ui }) {
   const R = mobile ? 0.62 : 0.55; // radio base de cada forma (unidades de mundo)
   const mats = {};
   KINDS.forEach((k) => {
-    mats[k.id] = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color(color(k.token)), roughness: 0.48, metalness: 0,
+    mats[k.id] = new MeshPhysicalMaterial({
+      color: new Color(color(k.token)), roughness: 0.48, metalness: 0,
       clearcoat: 0.35, clearcoatRoughness: 0.55, sheen: 0.2,
     });
   });
@@ -105,19 +107,19 @@ export function initLab({ mount, ui }) {
 
   function geometryFor(id) {
     switch (id) {
-      case 'circulo': return new THREE.SphereGeometry(R, 40, 28);
-      case 'dona': return new THREE.TorusGeometry(R * 0.68, R * 0.32, 24, 48);
+      case 'circulo': return new SphereGeometry(R, 40, 28);
+      case 'dona': return new TorusGeometry(R * 0.68, R * 0.32, 24, 48);
       case 'luna': {
-        const sh = new THREE.Shape();
+        const sh = new Shape();
         sh.absarc(0, 0, R * 1.05, Math.PI, 2 * Math.PI, false);
         sh.lineTo(-R * 1.05, 0);
-        const g = new THREE.ExtrudeGeometry(sh, { depth: R * 0.8, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 3, curveSegments: 32 });
+        const g = new ExtrudeGeometry(sh, { depth: R * 0.8, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 3, curveSegments: 32 });
         g.center();
         return g;
       }
-      case 'triangulo': return new THREE.CylinderGeometry(R * 1.05, R * 1.05, R * 0.8, 3).rotateX(Math.PI / 2);
-      case 'pildora': return new THREE.CapsuleGeometry(R * 0.42, R * 1.5, 8, 24).rotateZ(Math.PI / 2);
-      case 'cuadrado': return new THREE.BoxGeometry(R * 1.5, R * 1.5, R * 1.1);
+      case 'triangulo': return new CylinderGeometry(R * 1.05, R * 1.05, R * 0.8, 3).rotateX(Math.PI / 2);
+      case 'pildora': return new CapsuleGeometry(R * 0.42, R * 1.5, 8, 24).rotateZ(Math.PI / 2);
+      case 'cuadrado': return new BoxGeometry(R * 1.5, R * 1.5, R * 1.1);
     }
   }
   function bodyFor(id) {
@@ -136,7 +138,7 @@ export function initLab({ mount, ui }) {
   const audio = createAudio({ onChange: ui?.onSound });
   const items = []; // { kind, mesh, body, note, last, flash }
   function spawn(kind, x, y) {
-    const mesh = new THREE.Mesh(geometryFor(kind.id), mats[kind.id]);
+    const mesh = new Mesh(geometryFor(kind.id), mats[kind.id]);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
@@ -157,14 +159,14 @@ export function initLab({ mount, ui }) {
   }
 
   /* ---------- formación de la ə ---------- */
-  const formed = new Map(); // item → THREE.Vector3 objetivo
+  const formed = new Map(); // item → Vector3 objetivo
   const identity = new CANNON.Quaternion();
   function formGlyph() {
     const box = 600;
     const { glyph, dot, p } = glyphPoints(box, box, items.length);
     const pitch = R * 2.15; // separación entre piezas en el mundo
     const scale = Math.min(pitch / p, (viewH * 0.82) / box, (viewW * 0.9) / box);
-    const toWorld = (q) => new THREE.Vector3((q.x - box / 2) * scale, (box / 2 - q.y) * scale + 0.4, 0);
+    const toWorld = (q) => new Vector3((q.x - box / 2) * scale, (box / 2 - q.y) * scale + 0.4, 0);
     formed.clear();
     const circles = items.filter((i) => i.kind.id === 'circulo');
     while (circles.length < dot.length) circles.push(spawn(KINDS[0]));
@@ -202,8 +204,8 @@ export function initLab({ mount, ui }) {
   const hand = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, shape: new CANNON.Sphere(1.1) });
   hand.position.set(999, 999, 0);
   world.addBody(hand);
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  const zPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
+  const ray = new Raycaster(), ndc = new Vector2();
+  const zPlane = new Plane(new Vector3(0, 0, 1), 0), hit = new Vector3();
   let handTarget = null;
   const toWorldPoint = (e) => {
     const r = renderer.domElement.getBoundingClientRect();
@@ -231,7 +233,7 @@ export function initLab({ mount, ui }) {
 
   /* ---------- bucle ---------- */
   let last = performance.now();
-  const flashColor = new THREE.Color(0xffffff);
+  const flashColor = new Color(0xffffff);
   function frame(t) {
     const dt = Math.min(0.05, (t - last) / 1000);
     last = t;

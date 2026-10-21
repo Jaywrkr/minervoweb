@@ -4,7 +4,7 @@
 // es transparente y no recibe eventos: el 2D sigue manejando puntero y franjas op-art.
 import {
   WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Mesh, PlaneGeometry,
-  ShadowMaterial, MeshPhysicalMaterial, SphereGeometry, TorusGeometry, ExtrudeGeometry, Shape,
+  ShadowMaterial, MeshPhysicalMaterial, MeshStandardMaterial, SphereGeometry, TorusGeometry, ExtrudeGeometry, Shape,
   CapsuleGeometry, Color, PCFSoftShadowMap, ACESFilmicToneMapping, SRGBColorSpace, MathUtils,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -12,15 +12,16 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 const FOV = 28, CAM_Z = 40, WALL_Z = -1.6;
 
 // Geometrías de radio base 1, alineadas con los cuerpos de Matter (eje y hacia arriba).
-function unitGeometry(id) {
+function unitGeometry(id, lite) {
+  const q = lite ? 0.6 : 1; // menos polígonos en teléfonos
   switch (id) {
-    case 'circulo': return new SphereGeometry(1, 40, 28);
-    case 'dona': return new TorusGeometry(0.9 * 0.75, 0.9 * 0.25, 24, 56);
+    case 'circulo': return new SphereGeometry(1, Math.round(40 * q), Math.round(28 * q));
+    case 'dona': return new TorusGeometry(0.9 * 0.75, 0.9 * 0.25, Math.round(24 * q), Math.round(56 * q));
     case 'luna': {
       const r = 1.15, sh = new Shape();
       sh.absarc(0, 0, r, Math.PI, 2 * Math.PI, false);
       sh.lineTo(-r, 0);
-      const g = new ExtrudeGeometry(sh, { depth: 0.8, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.06, bevelSegments: 3, curveSegments: 36 });
+      const g = new ExtrudeGeometry(sh, { depth: 0.8, bevelEnabled: true, bevelSize: 0.06, bevelThickness: 0.06, bevelSegments: lite ? 2 : 3, curveSegments: Math.round(36 * q) });
       g.translate(0, (4 * r) / (3 * Math.PI), -0.4); // centroide del semicírculo, como en Matter
       return g;
     }
@@ -36,8 +37,8 @@ function unitGeometry(id) {
       g.translate(0, 0, -0.4);
       return g;
     }
-    case 'pildora': return new CapsuleGeometry(0.475, 1.85, 10, 28).rotateZ(Math.PI / 2);
-    case 'cuadrado': return new RoundedBoxGeometry(1.6, 1.6, 1.1, 4, 0.12);
+    case 'pildora': return new CapsuleGeometry(0.475, 1.85, Math.round(10 * q), Math.round(28 * q)).rotateZ(Math.PI / 2);
+    case 'cuadrado': return new RoundedBoxGeometry(1.6, 1.6, 1.1, lite ? 2 : 4, 0.12);
   }
 }
 
@@ -79,11 +80,56 @@ export function createRender3D(colorOf) {
   scene.add(wall);
 
   const geos = {}, mats = {};
-  const matFor = (kind) => (mats[kind.id] ||= new MeshPhysicalMaterial({
-    color: new Color(colorOf(kind.token)), roughness: 0.48, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.55,
-  }));
+  // en teléfonos, material estándar (sin clearcoat): casi igual a la vista y bastante más liviano
+  const matFor = (kind) => (mats[kind.id] ||= mobile
+    ? new MeshStandardMaterial({ color: new Color(colorOf(kind.token)), roughness: 0.45, metalness: 0 })
+    : new MeshPhysicalMaterial({ color: new Color(colorOf(kind.token)), roughness: 0.48, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.55 }));
   const meshes = new Map(); // body → mesh
   let W = 0, H = 0, k = 1; // k = unidades de mundo por píxel
+
+  /* ---------- calidad adaptativa ----------
+     Mide los cuadros por segundo reales. Si baja de ~45 fps, reduce resolución y sombras paso a paso;
+     si sobra rendimiento por un rato, vuelve a subir. Nunca baja de 1x sin sombras. */
+  const dev = Math.min(window.devicePixelRatio || 1, 2);
+  const LEVELS = [
+    { dpr: dev, shadows: true, map: 2048 },
+    { dpr: Math.min(dev, 1.5), shadows: true, map: 1024 },
+    { dpr: Math.min(dev, 1.25), shadows: true, map: 1024 },
+    { dpr: 1, shadows: false, map: 512 },
+  ];
+  let level = mobile ? 1 : 0;
+  const topLevel = level;
+  let frames = 0, acc = 0, good = 0, lastT = 0;
+  function applyLevel() {
+    const L = LEVELS[level];
+    renderer.setPixelRatio(L.dpr);
+    if (W) renderer.setSize(W, H, false);
+    if (key.shadow.map && key.shadow.mapSize.x !== L.map) { key.shadow.map.dispose(); key.shadow.map = null; }
+    key.shadow.mapSize.set(L.map, L.map);
+    key.castShadow = L.shadows;
+    wall.visible = L.shadows;
+    dirty = true;
+  }
+  function measure(t) {
+    if (lastT) { acc += Math.min(100, t - lastT); frames++; }
+    lastT = t;
+    if (frames < 90) return;
+    const avg = acc / frames;
+    frames = 0; acc = 0;
+    if (avg > 22 && level < LEVELS.length - 1) { level++; good = 0; applyLevel(); }
+    else if (avg < 14 && level > topLevel && ++good >= 3) { level--; good = 0; applyLevel(); }
+  }
+
+  /* ---------- no dibujar si nada cambió ---------- */
+  let dirty = true, lastSig = NaN;
+  function signature(bodies) {
+    let sig = bodies.length * 1000;
+    for (const b of bodies) {
+      sig += b.position.x * 0.37 + b.position.y * 0.71 + b.angle * 13 + b.plugin.sc * 7;
+      if ((b.plugin.flash || 0) > 0.03) return NaN; // hay un destello en curso
+    }
+    return sig;
+  }
 
   function resize(w, h) {
     W = w; H = h;
@@ -96,15 +142,21 @@ export function createRender3D(colorOf) {
     const s = Math.max(viewH * camera.aspect, viewH) * 0.6;
     Object.assign(key.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 1, far: 80 });
     key.shadow.camera.updateProjectionMatrix();
+    dirty = true;
   }
 
   function render(bodies) {
+    measure(performance.now());
+    const sig = signature(bodies);
+    if (!dirty && sig === sig && Math.abs(sig - lastSig) < 0.05) return; // escena quieta: no gastar GPU
+    lastSig = sig;
+    dirty = false;
     const alive = new Set();
     for (const b of bodies) {
       const kind = b.plugin.kind;
       let m = meshes.get(b);
       if (!m) {
-        m = new Mesh(geos[kind.id] ||= unitGeometry(kind.id), matFor(kind));
+        m = new Mesh(geos[kind.id] ||= unitGeometry(kind.id, mobile), matFor(kind));
         m.castShadow = true;
         m.userData.seed = Math.random() * Math.PI * 2;
         scene.add(m);
@@ -131,5 +183,6 @@ export function createRender3D(colorOf) {
     renderer.render(scene, camera);
   }
 
-  return { el, resize, render };
+  applyLevel();
+  return { el, resize, render, get level() { return level; } };
 }
